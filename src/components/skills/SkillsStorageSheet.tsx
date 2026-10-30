@@ -68,7 +68,7 @@ export function SkillsStorageSheet({
   const resyncMutation = useResyncSkillsToApps();
 
   const location: SkillStorageLocation =
-    settings?.skillStorageLocation ?? "cc_switch"; // 后端序列化值，见 types.ts
+    settings?.skillStorageLocation ?? "app"; // 后端序列化值，见 types.ts
   const syncMethod: SkillSyncMethod = settings?.skillSyncMethod ?? "auto";
   const installedCount = installedSkills?.length ?? 0;
   const appDir = appDirRaw
@@ -211,10 +211,10 @@ export function SkillsStorageSheet({
                     type="radio"
                     name="skills-storage-location"
                     className={RADIO_CLASS}
-                    checked={pendingLocation === "cc_switch"}
+                    checked={pendingLocation === "app"}
                     disabled={isMigrating}
                     aria-describedby="skills-storage-cc-path"
-                    onChange={() => setPendingLocation("cc_switch")}
+                    onChange={() => setPendingLocation("app")}
                   />
                   {t("skills.storageSheet.locationCcSwitch")}
                 </label>

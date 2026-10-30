@@ -256,9 +256,9 @@ export interface ClaudeStackModel {
 export type SkillSyncMethod = "auto" | "symlink" | "copy";
 
 // Skill 存储位置。
-// 取值 cc_switch 是 Rust 侧 SkillStorageLocation 的序列化值，改名属于破坏性配置变更
-// （既有 settings.json 里存的是 cc_switch），故保留。
-export type SkillStorageLocation = "cc_switch" | "unified";
+// 取值 app 是 Rust 侧 SkillStorageLocation::App 的序列化值；旧值 "cc_switch" 由 Rust 侧
+// #[serde(alias)] 兼容读取，前端只写新值。
+export type SkillStorageLocation = "app" | "unified";
 
 // Claude API 格式类型
 // - "anthropic": 原生 Anthropic Messages API 格式，直接透传

@@ -269,22 +269,22 @@ export const skillsApi = {
 
   /** 迁移 Skill 存储位置 */
   async migrateStorage(
-    // 取值 cc_switch 与后端 SkillStorageLocation 的序列化值一致，不能改
-    target: "cc_switch" | "unified",
+    // 取值与后端 SkillStorageLocation::App 的序列化值一致
+    target: "app" | "unified",
   ): Promise<MigrationResult> {
     return await invoke("migrate_skill_storage", { target });
   },
 
   /** 本应用数据目录下放 Skill 主副本的路径（改过配置目录就是改后的） */
   async getAppSkillsDir(): Promise<string> {
-    // 命令名沿用上游 Rust 侧的 get_cc_switch_skills_dir，重命名需同步改 src-tauri
-    return await invoke("get_cc_switch_skills_dir");
+    // 命令名与 Rust 侧 src-tauri/src/commands/skill.rs 的 get_app_skills_dir 对应
+    return await invoke("get_app_skills_dir");
   },
 
   /** 在文件管理器里打开本应用数据目录下的 Skills 目录 */
   async openAppSkillsDir(): Promise<void> {
-    // 命令名沿用上游 Rust 侧的 open_cc_switch_skills_dir，重命名需同步改 src-tauri
-    await invoke("open_cc_switch_skills_dir");
+    // 命令名与 Rust 侧 src-tauri/src/commands/skill.rs 的 open_app_skills_dir 对应
+    await invoke("open_app_skills_dir");
   },
 
   /** 搜索 skills.sh 公共目录 */
