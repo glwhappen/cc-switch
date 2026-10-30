@@ -287,7 +287,7 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
           type="button"
           variant="neutral"
           size="compact"
-          onClick={() => settingsApi.openExternal("https://ccswitch.io")}
+          onClick={() => settingsApi.openExternal("https://cc.hsfp.cn")}
         >
           <Globe className="h-3.5 w-3.5" />
           {t("settings.officialWebsite")}

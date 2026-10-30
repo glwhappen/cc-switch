@@ -54,9 +54,11 @@
   },
   "firstRunNotice": {
     "title": "CC Switch へようこそ",
-    "bodyDefault": "CC Switch は Claude Code / Codex / Gemini CLI の複数プロバイダーをワンクリックで切り替えられるツールです。すでにこれらのツールを設定済みの場合、CC Switch は現在の設定を「default」という名前のプロバイダーとして自動的に保存するので、既存の設定が失われることはありません。",
-    "bodyOfficial": "リストには「Official（公式）」プリセットも用意されており、公式バージョンに戻したくなったらクリックするだけで切り替えられます。切り替える前に現在の設定は自動で default にバックアップされるので、自由に行き来できます。これが CC Switch の仕組みです 😊",
-    "confirm": "了解しました"
+    "step1": "ステップ 1 · キーを取得\nhttps://cc.hsfp.cn/ を開いてアカウントでサインインし、sk- で始まる文字列をコピーします。",
+    "step2": "ステップ 2 · ここに貼り付け\n左側で Claude Code または Codex を選び、右上の「+」→「HSFP」プリセットを選択 → キーを貼り付けて保存し有効化します。",
+    "step3": "ステップ 3 · CLI をインストール\n左側の「アプリ」ページで必要なツールを探してインストールします。その後ターミナルで claude または codex を実行できます。",
+    "openConsole": "キーを取得",
+    "confirm": "はじめる"
   },
   "apiKeyInput": {
     "placeholder": "API Key を入力",

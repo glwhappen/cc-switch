@@ -15,8 +15,8 @@ import { useSettingsQuery } from "@/lib/query";
 import { settingsApi } from "@/lib/api";
 import { markSeen } from "@/lib/whatsNew";
 
-/** 用户拿 Key 的控制台地址（本分发版私有网关）。 */
-const CONSOLE_URL = "https://new-api.hsfp.cn/console/token";
+/** 用户拿 Key 的官网地址（本分发版的领 Key 入口，比让用户自己找控制台简单）。 */
+const CONSOLE_URL = "https://cc.hsfp.cn/";
 
 const STEP_KEYS = ["step1", "step2", "step3"] as const;
 

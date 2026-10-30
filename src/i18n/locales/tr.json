@@ -54,9 +54,11 @@
   },
   "firstRunNotice": {
     "title": "CC Switch’e hoş geldiniz",
-    "bodyDefault": "CC Switch, tek bir tıklamayla birden fazla Claude Code / Codex / Gemini CLI sağlayıcısı arasında geçiş yapmanızı sağlar. Bu araçları zaten yapılandırdıysanız, CC Switch mevcut kurulumunuzu \"varsayılan\" adlı bir sağlayıcı olarak kaydetmiştir, böylece önceki yapılandırmalarınızın hiçbiri kaybolmaz.",
-    "bodyOfficial": "Listede “Resmî” ön ayarı da bulunur; resmî varsayılan ayarlara dönmek istediğinizde buna tıklayın. CC Switch, geçiş yapmadan önce mevcut yapılandırmanızı “default” olarak yedekler; böylece iki yapılandırma arasında rahatça geçiş yapabilirsiniz. CC Switch böyle çalışır 😊",
-    "confirm": "Anladım"
+    "step1": "Adım 1 - Bir anahtar alın\nhttps://cc.hsfp.cn/ adresini açıp hesabınızla giriş yapın ve sk- ile başlayan dizeyi kopyalayın.",
+    "step2": "Adım 2 - Buraya yapıştırın\nSoldan Claude Code veya Codex seçin, sağ üstteki \"+\" düğmesine tıklayın, HSFP ön ayarını seçin, anahtarı yapıştırıp kaydedin ve etkinleştirin.",
+    "step3": "Adım 3 - CLI'yı kurun\nSoldaki \"Uygulamalar\" sayfasından ihtiyacınız olan aracı bulup Kur'a tıklayın. Sonra terminalde claude veya codex çalıştırın.",
+    "openConsole": "Anahtar al",
+    "confirm": "Başla"
   },
   "apiKeyInput": {
     "placeholder": "API Anahtarını Girin",

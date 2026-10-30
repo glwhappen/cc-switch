@@ -54,9 +54,11 @@
   },
   "firstRunNotice": {
     "title": "欢迎使用 CC Switch",
-    "bodyDefault": "CC Switch 可以帮你在 Claude Code / Codex / Gemini CLI 的多个供应商之间一键切换。如果你之前已经配置过这些工具，CC Switch 会自动把现有设置保存为名为 “default” 的供应商，保证你的配置不会丢失。",
-    "bodyOfficial": "列表里还预置了 “官方（Official）” 供应商，随时点一下即可切回官方默认配置。切换前 CC Switch 会自动把当前配置备份回 default，可以放心来回切。CC Switch 就是这样工作的 😊",
-    "confirm": "我知道了"
+    "step1": "第 1 步 · 拿一个 Key\n打开 https://cc.hsfp.cn/ ，用你的账号登录，复制以 sk- 开头的那串字符。",
+    "step2": "第 2 步 · 填进本软件\n左侧选 Claude Code 或 Codex → 点右上角「+」→ 选「HSFP」预设 → 粘贴 Key → 保存并启用。",
+    "step3": "第 3 步 · 装命令行工具\n左侧「应用」页 → 找到要用的工具 → 点安装。装好后在终端输入 claude 或 codex 就能用了。",
+    "openConsole": "去官网领 Key",
+    "confirm": "开始吧"
   },
   "apiKeyInput": {
     "placeholder": "请输入API Key",
