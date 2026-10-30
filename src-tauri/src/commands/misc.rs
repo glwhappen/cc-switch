@@ -639,6 +639,199 @@ fn tool_display_name(tool: &str) -> &'static str {
 /// `wsl.exe ... -- sh -c "<cmd>"` 子 shell 里执行命令,外层脚本的 `set -o pipefail`
 /// 不会继承进去;而 WSL 默认 shell 可能是 dash/ash,也不能假设支持 `set -o pipefail`。
 /// 先下载到 mktemp 文件再交给 bash,能让 curl 失败稳定变成整条命令失败。
+/// 从 npmmirror 直接下载官方原生二进制 —— 中国网络下的主安装路径。
+///
+/// 官方 installer 在国内不可用：`https://claude.ai/install.sh` 会 302 到
+/// `claude.com/app-unavailable-in-region`（Anthropic 按地区拒绝），
+/// `https://chatgpt.com/codex/install.sh` 直接连不上；走 npm 虽然能装，但要求先有 Node。
+/// 而两家 npm 包里的「平台分包」本身就是原生二进制（`package/claude` / `bin/codex`），
+/// 打包在 tgz 里。所以这里绕过 installer 与 Node：curl + tar + 复制，一次装好。
+///
+/// 脚本整体被单引号包裹，内部只能用双引号；`\"` 在单引号里是字面量，正好给 sed 用。
+/// 版本号动态取 `/latest`，避免每次上游发版都要改代码。
+const CLAUDE_MIRROR_INSTALL_UNIX: &str = r#"bash -c '
+set -e
+M=https://registry.npmmirror.com
+V=$(curl -fsSL "$M/@anthropic-ai/claude-code/latest" | sed -n "s/.*\"version\":\"\([^\"]*\)\".*/\1/p" | head -1)
+[ -n "$V" ] || exit 20
+case "$(uname -s)" in Linux) O=linux ;; Darwin) O=darwin ;; *) exit 21 ;; esac
+case "$(uname -m)" in x86_64|amd64) A=x64 ;; arm64|aarch64) A=arm64 ;; *) exit 22 ;; esac
+T=$(mktemp -d)
+curl -fsSL --retry 3 --connect-timeout 20 "$M/@anthropic-ai/claude-code-$O-$A/-/claude-code-$O-$A-$V.tgz" -o "$T/p.tgz" || { rm -rf "$T"; exit 23; }
+tar xzf "$T/p.tgz" -C "$T" || { rm -rf "$T"; exit 24; }
+B=$(find "$T/package" -type f -name claude | head -1)
+[ -n "$B" ] || { rm -rf "$T"; exit 25; }
+mkdir -p "$HOME/.local/bin"
+cp "$B" "$HOME/.local/bin/.claude.new" && chmod 755 "$HOME/.local/bin/.claude.new" && mv "$HOME/.local/bin/.claude.new" "$HOME/.local/bin/claude"
+rm -rf "$T"
+"$HOME/.local/bin/claude" --version'"#;
+
+/// Codex 走同一套镜像直下，但布局要**模仿官方 install.sh 产物**，否则
+/// `codex_standalone_install()` 认不出来、升级会退回裸 `npm i -g` 另装一份。
+///
+/// 官方布局（`misc.rs` 里 `CodexStandaloneInstall` 文档已记录）：
+/// `<CODEX_HOME>/packages/standalone/releases/<ver>-<target>/` + `current` 软链，
+/// `~/.local/bin/codex` 指向 `current/bin/codex`。探测只看 real path 里有没有
+/// `/packages/standalone/`，所以这套目录建对了就能被当成官方独立安装。
+///
+/// 注意 tarball 内的 vendor 目录名是 Rust target triple（与 npm 包名的 os-arch 不同）。
+const CODEX_MIRROR_INSTALL_UNIX: &str = r#"bash -c '
+set -e
+M=https://registry.npmmirror.com
+V=$(curl -fsSL "$M/@openai/codex/latest" | sed -n "s/.*\"version\":\"\([^\"]*\)\".*/\1/p" | head -1)
+[ -n "$V" ] || exit 20
+case "$(uname -s)" in Linux) O=linux ;; Darwin) O=darwin ;; *) exit 21 ;; esac
+case "$(uname -m)" in
+  x86_64|amd64) A=x64; TRIPLE=x86_64-unknown-linux-musl ;;
+  arm64|aarch64) A=arm64; TRIPLE=aarch64-unknown-linux-musl ;;
+  *) exit 22 ;;
+esac
+if [ "$O" = "darwin" ]; then
+  case "$A" in x64) TRIPLE=x86_64-apple-darwin ;; *) TRIPLE=aarch64-apple-darwin ;; esac
+fi
+CH=${CODEX_HOME:-$HOME/.codex}
+DEST="$CH/packages/standalone/releases/$V-$TRIPLE"
+TMP=$(mktemp -d)
+curl -fsSL --retry 3 --connect-timeout 20 "$M/@openai/codex/-/codex-$V-$O-$A.tgz" -o "$TMP/p.tgz" || { rm -rf "$TMP"; exit 23; }
+tar xzf "$TMP/p.tgz" -C "$TMP" || { rm -rf "$TMP"; exit 24; }
+SRC=$(find "$TMP/package/vendor" -mindepth 1 -maxdepth 1 -type d | head -1)
+[ -n "$SRC" ] || { rm -rf "$TMP"; exit 25; }
+mkdir -p "$(dirname "$DEST")"
+rm -rf "$DEST"
+mv "$SRC" "$DEST"
+rm -rf "$TMP"
+mkdir -p "$CH/packages/standalone"
+ln -sfn "$DEST" "$CH/packages/standalone/current"
+mkdir -p "$HOME/.local/bin"
+ln -sf "$CH/packages/standalone/current/bin/codex" "$HOME/.local/bin/codex"
+"$HOME/.local/bin/codex" --version'"#;
+
+/// 镜像直下优先；不可达时退回官方 installer，再不行才用 npm（海外/直连可用时的退路）。
+fn mirror_first(mirror: &str, official: &str, tool: &str) -> String {
+    chain_update_commands(
+        mirror.to_string(),
+        installer_with_npm_fallback(official, tool),
+        LifecycleCommandShell::Posix,
+    )
+}
+
+/// Windows 版镜像直下。Win10 1803+ 自带 `tar.exe`，`Invoke-RestMethod` 天然会解析 JSON，
+/// 所以 PS 版比 POSIX 版还短，也不用 sed 抠字符串。装到
+/// `%LOCALAPPDATA%\Programs\claude\bin`（per-user，不需要管理员），并自己写进用户 PATH，
+/// 省掉用户手动配环境变量这一步。
+#[cfg(target_os = "windows")]
+const CLAUDE_MIRROR_INSTALL_WINDOWS_SCRIPT: &str = r#"
+$ErrorActionPreference = 'Stop'
+$M = 'https://registry.npmmirror.com'
+$pkg = '@anthropic-ai/claude-code'
+$slug = 'claude-code'
+$V = (Invoke-RestMethod -Uri "$M/$pkg/latest" -TimeoutSec 25).version
+if (-not $V) { throw 'mirror: version parse failed' }
+$A = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
+$T = Join-Path $env:TEMP ('claude-mirror-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $T -Force | Out-Null
+try {
+  $tgz = Join-Path $T 'p.tgz'
+  Invoke-WebRequest -Uri "$M/$pkg-win32-$A/-/$slug-win32-$A-$V.tgz" -OutFile $tgz -TimeoutSec 600
+  tar.exe -xzf $tgz -C $T
+  if ($LASTEXITCODE -ne 0) { throw "mirror: tar failed ($LASTEXITCODE)" }
+  $bin = Get-ChildItem -Path (Join-Path $T 'package') -Filter 'claude.exe' -Recurse -ErrorAction Stop |
+         Select-Object -First 1
+  if (-not $bin) { throw 'mirror: claude.exe not found' }
+  $dest = Join-Path $env:LOCALAPPDATA 'Programs\claude\bin'
+  New-Item -ItemType Directory -Path $dest -Force | Out-Null
+  Copy-Item $bin.FullName (Join-Path $dest 'claude.exe') -Force
+  $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+  if (-not $userPath) { $userPath = '' }
+  if ($userPath -notlike "*$dest*") {
+    [Environment]::SetEnvironmentVariable('Path', (($userPath.TrimEnd(';') + ';' + $dest).TrimStart(';')), 'User')
+  }
+  if ($env:Path -notlike "*$dest*") { $env:Path = $env:Path + ';' + $dest }
+  & (Join-Path $dest 'claude.exe') --version
+} finally {
+  Remove-Item $T -Recurse -Force -ErrorAction SilentlyContinue
+}
+"#;
+
+#[cfg(target_os = "windows")]
+fn claude_mirror_install_windows_command() -> String {
+    format!(
+        "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand {}",
+        powershell_encoded_command(CLAUDE_MIRROR_INSTALL_WINDOWS_SCRIPT)
+    )
+}
+
+/// Codex 的 Windows 镜像直下。布局与官方 install.ps1 一致，两个关键点：
+///
+/// 1. `<CODEX_HOME>\packages\standalone\releases\<ver>-<triple>\` 放整份 vendor 目录
+///    （`bin\codex.exe` + `codex-resources` + `codex-path`），不能只抄 exe；
+/// 2. 入口 `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin` **本身是一个 junction**，
+///    指向 `current\bin`——这样 real path 里会带 `/packages/standalone/`，
+///    上游 `codex_standalone_install()` 才能识别成官方独立安装（而不是退回 npm）。
+///
+/// junction 不需要开发者模式/管理员，比 symlink 稳（symlink 在高权限策略下会失败）。
+#[cfg(target_os = "windows")]
+const CODEX_MIRROR_INSTALL_WINDOWS_SCRIPT: &str = r#"
+$ErrorActionPreference = 'Stop'
+$M = 'https://registry.npmmirror.com'
+$V = (Invoke-RestMethod -Uri "$M/@openai/codex/latest" -TimeoutSec 25).version
+if (-not $V) { throw 'mirror: version parse failed' }
+if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') {
+  $A = 'arm64'; $TRIPLE = 'aarch64-pc-windows-msvc'
+} else {
+  $A = 'x64';   $TRIPLE = 'x86_64-pc-windows-msvc'
+}
+$CH = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE '.codex' }
+$DEST = Join-Path $CH "packages\standalone\releases\$V-$TRIPLE"
+$CURRENT = Join-Path $CH 'packages\standalone\current'
+$T = Join-Path $env:TEMP ('codex-mirror-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $T -Force | Out-Null
+try {
+  $tgz = Join-Path $T 'p.tgz'
+  Invoke-WebRequest -Uri "$M/@openai/codex/-/codex-$V-win32-$A.tgz" -OutFile $tgz -TimeoutSec 900
+  tar.exe -xzf $tgz -C $T
+  if ($LASTEXITCODE -ne 0) { throw "mirror: tar failed ($LASTEXITCODE)" }
+  $vendor = Get-ChildItem -Path (Join-Path $T 'package\vendor') -Directory -ErrorAction Stop |
+            Select-Object -First 1
+  if (-not $vendor) { throw 'mirror: vendor dir not found' }
+  New-Item -ItemType Directory -Path (Split-Path $DEST -Parent) -Force | Out-Null
+  if (Test-Path $DEST) { Remove-Item $DEST -Recurse -Force }
+  Move-Item $vendor.FullName $DEST
+  if (Test-Path $CURRENT) { Remove-Item $CURRENT -Force -Recurse }
+  New-Item -ItemType Junction -Path $CURRENT -Target $DEST | Out-Null
+  $binDir = Join-Path $env:LOCALAPPDATA 'Programs\OpenAI\Codex\bin'
+  if (Test-Path $binDir) { Remove-Item $binDir -Force -Recurse }
+  New-Item -ItemType Directory -Path (Split-Path $binDir -Parent) -Force | Out-Null
+  New-Item -ItemType Junction -Path $binDir -Target (Join-Path $DEST 'bin') | Out-Null
+  $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+  if (-not $userPath) { $userPath = '' }
+  if ($userPath -notlike "*$binDir*") {
+    [Environment]::SetEnvironmentVariable('Path', (($userPath.TrimEnd(';') + ';' + $binDir).TrimStart(';')), 'User')
+  }
+  if ($env:Path -notlike "*$binDir*") { $env:Path = $env:Path + ';' + $binDir }
+  & (Join-Path $DEST 'bin\codex.exe') --version
+} finally {
+  Remove-Item $T -Recurse -Force -ErrorAction SilentlyContinue
+}
+"#;
+
+#[cfg(target_os = "windows")]
+fn codex_mirror_install_windows_command() -> String {
+    format!(
+        "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand {}",
+        powershell_encoded_command(CODEX_MIRROR_INSTALL_WINDOWS_SCRIPT)
+    )
+}
+
+#[cfg(target_os = "windows")]
+fn mirror_install_windows_command(tool: &str) -> Option<String> {
+    match tool {
+        "claude" => Some(claude_mirror_install_windows_command()),
+        "codex" => Some(codex_mirror_install_windows_command()),
+        _ => None,
+    }
+}
+
 const CLAUDE_INSTALL_UNIX: &str =
     "bash -c 'tmp=$(mktemp) && curl -fsSL https://claude.ai/install.sh -o $tmp && bash $tmp; status=$?; rm -f $tmp; exit $status'";
 const OPENCODE_INSTALL_UNIX: &str =
@@ -1033,6 +1226,21 @@ fn tool_action_shell_command_for_shell(
             }
             .to_string(),
         );
+    }
+
+    // claude / codex 在 Windows 上原本只能靠 npm（官方 installer 是 bash 脚本），而 npm 要求
+    // 用户先装 Node。镜像直下不需要 Node，作为主路径；npm 留作兜底。
+    #[cfg(target_os = "windows")]
+    if matches!(action, ToolLifecycleAction::Install)
+        && matches!(shell, LifecycleCommandShell::WindowsBatch)
+    {
+        if let Some(mirror) = mirror_install_windows_command(tool) {
+            return Some(chain_update_commands(
+                mirror,
+                npm_install_command_for(tool).unwrap_or_default().to_string(),
+                shell,
+            ));
+        }
     }
 
     let install = npm_install_command_for(tool)?;
@@ -4553,7 +4761,39 @@ enum UpdateCommand {
     Unmanaged,
 }
 
+/// 本分发版：claude / codex 的「升级」= 重跑一次镜像安装（脚本本身是幂等的覆盖写）。
+///
+/// 为什么不走上游锚定逻辑：上游锚定后会拼 `npm i -g`，而 npm 要求用户已装 Node；
+/// Codex 独立安装那条则重跑 `chatgpt.com/codex/install.sh`，国内不可达。
+/// 我们的用户都是用镜像装进来的，所以升级也走镜像最直接。
+///
+/// 副作用（已知且可接受）：用户若自己用官方安装器装的 claude/codex，升级后会被改成镜像布局。
+fn mirror_reinstall_command(tool: &str) -> Option<String> {
+    if !matches!(tool, "claude" | "codex") {
+        return None;
+    }
+    let command = platform_mirror_install_command(tool);
+    (!command.is_empty()).then_some(command)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn platform_mirror_install_command(tool: &str) -> String {
+    match tool {
+        "claude" => CLAUDE_MIRROR_INSTALL_UNIX.to_string(),
+        "codex" => CODEX_MIRROR_INSTALL_UNIX.to_string(),
+        _ => String::new(),
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn platform_mirror_install_command(tool: &str) -> String {
+    mirror_install_windows_command(tool).unwrap_or_default()
+}
+
 fn resolve_update_command(tool: &str, installs: &[ToolInstallation]) -> UpdateCommand {
+    if let Some(command) = mirror_reinstall_command(tool) {
+        return UpdateCommand::Static(command);
+    }
     if let Some(command) = installs_anchored_command(tool, installs) {
         return UpdateCommand::Anchored(command);
     }
@@ -4639,7 +4879,10 @@ fn installer_with_npm_fallback(installer: &str, tool: &str) -> String {
 
 fn posix_install_command_for(tool: &str) -> String {
     match tool {
-        "claude" => installer_with_npm_fallback(CLAUDE_INSTALL_UNIX, tool),
+        "claude" => mirror_first(CLAUDE_MIRROR_INSTALL_UNIX, CLAUDE_INSTALL_UNIX, tool),
+        // Codex 的官方 installer 只在非 Windows 上定义；Windows 那边继续走 npm/官方 ps1。
+        #[cfg(not(target_os = "windows"))]
+        "codex" => mirror_first(CODEX_MIRROR_INSTALL_UNIX, CODEX_INSTALL_UNIX, tool),
         // Grok 的 npm fallback **会切换用户的分发模式**（该包 postinstall 把
         // `~/.grok/config.toml` 的 `[cli] installer` 写成 `npm`，此后 `grok update` 一律走
         // npm、隐式依赖 node）。仍然保留它：官方 installer 不可达（防火墙 / x.ai 被拦）时
@@ -9565,26 +9808,30 @@ mod tests {
         use super::super::*;
 
         #[test]
-        fn claude_install_prefers_native_with_npm_fallback() {
-            // Anthropic 现在主推 native installer(claude.ai/install.sh),
-            // 网络不通时短路到 npm 仍能装上;两段都得在,顺序也得对。
+        fn claude_install_prefers_mirror_then_native_then_npm() {
+            // 本分发版的策略：镜像直下 → 官方 native installer → npm，三段都要在且顺序不能乱。
+            // 镜像放第一是因为 claude.ai/install.sh 在中国大陆会 302 到
+            // `claude.com/app-unavailable-in-region`（实测），官方那条只对海外/直连有效。
+            //
+            // 注意不能用 `split("||")` 数段落：镜像脚本内部自己就有多处 `|| { …; exit N; }`，
+            // 按分隔符切会切碎。改用位置比较验证顺序。
             let cmd = install_command_for("claude");
+            let mirror = cmd
+                .find("registry.npmmirror.com")
+                .unwrap_or_else(|| panic!("should include mirror: {cmd}"));
+            let native = cmd
+                .find("https://claude.ai/install.sh")
+                .unwrap_or_else(|| panic!("should keep official installer URL: {cmd}"));
+            let npm = cmd
+                .find("@anthropic-ai/claude-code@latest")
+                .unwrap_or_else(|| panic!("should keep npm package as fallback: {cmd}"));
+            assert!(mirror < native, "mirror must come first: {cmd}");
+            assert!(native < npm, "npm must be the last resort: {cmd}");
+            // 官方 installer 段仍不能是 `curl | bash` 管道形式。
             assert!(
-                cmd.contains("https://claude.ai/install.sh"),
-                "should include official installer URL: {cmd}"
-            );
-            assert!(
-                cmd.contains("@anthropic-ai/claude-code@latest"),
-                "should keep npm package as fallback: {cmd}"
-            );
-            let parts: Vec<&str> = cmd.split("||").collect();
-            assert_eq!(parts.len(), 2, "should be a two-step short-circuit chain");
-            assert!(parts[0].contains("install.sh"), "native first: {cmd}");
-            assert!(
-                !parts[0].contains('|'),
+                !cmd.contains("install.sh | "),
                 "native installer should avoid pipe: {cmd}"
             );
-            assert!(parts[1].contains("npm i -g"), "npm second: {cmd}");
         }
 
         #[test]
@@ -9607,11 +9854,42 @@ mod tests {
         }
 
         #[test]
-        fn codex_install_keeps_static_npm() {
-            // OpenAI 暂无独立 native installer,保持原裸 npm,不引入兜底链(无东西可兜底)。
+        fn codex_install_prefers_mirror_over_npm() {
+            // 上游原本是裸 `npm i -g`（Codex 无独立 native installer 时的保守选择）。
+            // 本分发版改为镜像优先：npm 要用户先有 Node，而镜像直下是原生二进制。
             let cmd = install_command_for("codex");
-            assert_eq!(cmd, "npm i -g @openai/codex@latest");
-            assert!(!cmd.contains("||"));
+            let mirror = cmd
+                .find("registry.npmmirror.com")
+                .unwrap_or_else(|| panic!("should include mirror: {cmd}"));
+            let npm = cmd
+                .find("@openai/codex@latest")
+                .unwrap_or_else(|| panic!("should keep npm fallback: {cmd}"));
+            assert!(mirror < npm, "mirror must come before npm: {cmd}");
+            // Codex 的 tarball 走 npm alias 形式，路径不是同名包。
+            assert!(
+                cmd.contains("@openai/codex/-/codex-"),
+                "codex platform tarball uses npm-alias path: {cmd}"
+            );
+        }
+
+        #[test]
+        fn claude_and_codex_updates_go_through_mirror() {
+            // 升级 = 重跑镜像安装（幂等覆盖）。不能返回上游的 `npm i -g` /
+            // `chatgpt.com/codex/install.sh`，否则没 Node 就永远升不了级。
+            for tool in ["claude", "codex"] {
+                match resolve_update_command(tool, &[]) {
+                    UpdateCommand::Static(cmd) => assert!(
+                        cmd.contains("registry.npmmirror.com"),
+                        "{tool} update should use mirror: {cmd}"
+                    ),
+                    other => panic!("{tool} update should be Static mirror command, got {other:?}"),
+                }
+            }
+            // 其它工具不受影响，仍走上游锚定逻辑。
+            assert!(!matches!(
+                resolve_update_command("gemini", &[]),
+                UpdateCommand::Static(ref c) if c.contains("npmmirror")
+            ));
         }
 
         #[test]

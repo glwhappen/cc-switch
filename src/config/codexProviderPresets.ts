@@ -133,6 +133,23 @@ function modelCatalog(
 }
 
 export const codexProviderPresets: CodexProviderPreset[] = [
+  // ===== 自有网关预设（品牌定制，置顶）=============================
+  {
+    name: "HSFP",
+    websiteUrl: "https://new-api.hsfp.cn",
+    apiKeyUrl: "https://new-api.hsfp.cn/console/token",
+    category: "third_party",
+    auth: generateThirdPartyAuth(""),
+    config: generateThirdPartyConfig(
+      "HSFP",
+      "https://new-api.hsfp.cn/v1",
+      "codex-1",
+    ),
+    endpointCandidates: ["https://new-api.hsfp.cn/v1"],
+    icon: "generic",
+    iconColor: "#0EA5E9",
+  },
+  // ================================================================
   {
     name: "OpenAI Official",
     websiteUrl: "https://chatgpt.com/codex",
@@ -228,7 +245,7 @@ export const codexProviderPresets: CodexProviderPreset[] = [
     ),
     endpointCandidates: ["https://api.moonshot.cn/v1"],
     // 原生 Responses 直连（不需要本地路由接管）：官方 Codex 接入文档
-    //（platform.kimi.com/docs/guide/codex-kimi.md，直接以 CC Switch 为例）
+    //（platform.kimi.com/docs/guide/codex-kimi.md，直接以 HSFP Code 为例）
     // 给出 base_url = https://api.moonshot.cn/v1 + wire_api = "responses"，
     // 并明写开放平台「原生支持 Codex 使用的 Responses API，无需协议转换或本
     // 地代理」；接口参考 platform.kimi.com/docs/api/responses.md（POST
@@ -331,7 +348,7 @@ export const codexProviderPresets: CodexProviderPreset[] = [
     ),
     endpointCandidates: ["https://api.kimi.com/coding/v1"],
     // 原生 Responses 直连（不需要本地路由接管）：官方 Codex 接入文档
-    //（kimi.com/code/docs/third-party-tools/codex.html，以 CC Switch 为例）
+    //（kimi.com/code/docs/third-party-tools/codex.html，以 HSFP Code 为例）
     // 给出 base_url = https://api.kimi.com/coding/v1 且 wire_api「必须填
     // responses」，并明写「Kimi Code 服务端原生支持 OpenAI Responses API
     //（流式/非流式、reasoning、function calling 均可用），无需任何本地路由
@@ -4831,7 +4848,7 @@ base_url = "https://cc-api.pipellm.ai/v1"`,
     websiteUrl: "https://moark.com",
     apiKeyUrl: "https://moark.com/dashboard/tokens",
     auth: generateThirdPartyAuth(""),
-    // 官方文档（CC Switch 快速配置）：Codex 走 /v1 的 Responses 原生协议
+    // 官方文档（HSFP Code 快速配置）：Codex 走 /v1 的 Responses 原生协议
     config: generateThirdPartyConfig(
       "moark",
       "https://moark.com/v1",

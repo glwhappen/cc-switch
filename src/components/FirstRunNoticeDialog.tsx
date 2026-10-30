@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
-import { Sparkles } from "lucide-react";
+import { ExternalLink, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,11 @@ import { Button } from "@/components/ui/button";
 import { useSettingsQuery } from "@/lib/query";
 import { settingsApi } from "@/lib/api";
 import { markSeen } from "@/lib/whatsNew";
+
+/** 用户拿 Key 的控制台地址（本分发版私有网关）。 */
+const CONSOLE_URL = "https://new-api.hsfp.cn/console/token";
+
+const STEP_KEYS = ["step1", "step2", "step3"] as const;
 
 /** 首次运行欢迎提示：仅当后端启动阶段保留 firstRunNoticeConfirmed 为空时弹出。 */
 export function FirstRunNoticeDialog() {
@@ -57,15 +62,35 @@ export function FirstRunNoticeDialog() {
             {t("firstRunNotice.title")}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3 px-6 py-5">
-          <DialogDescription className="whitespace-pre-line leading-relaxed">
-            {t("firstRunNotice.bodyDefault")}
-          </DialogDescription>
-          <DialogDescription className="whitespace-pre-line leading-relaxed">
-            {t("firstRunNotice.bodyOfficial")}
-          </DialogDescription>
+        <div className="space-y-2.5 px-6 py-5">
+          {STEP_KEYS.map((key) => {
+            const text = t(`firstRunNotice.${key}`);
+            const [head, ...rest] = text.split("\n");
+            return (
+              <div
+                key={key}
+                className="rounded-lg border border-border/40 bg-muted/15 px-3 py-2.5"
+              >
+                <div className="text-[13px] font-medium text-fg-1">
+                  {head}
+                </div>
+                {rest.length > 0 && (
+                  <DialogDescription className="mt-1 whitespace-pre-line text-[13px] leading-relaxed">
+                    {rest.join("\n")}
+                  </DialogDescription>
+                )}
+              </div>
+            );
+          })}
         </div>
         <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => void settingsApi.openExternal(CONSOLE_URL)}
+          >
+            <ExternalLink className="mr-1.5 h-4 w-4" />
+            {t("firstRunNotice.openConsole")}
+          </Button>
           <Button onClick={handleAcknowledge}>
             {t("firstRunNotice.confirm")}
           </Button>
