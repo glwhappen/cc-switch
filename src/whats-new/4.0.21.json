@@ -1,0 +1,19 @@
+{
+  "version": "4.0.21",
+  "items": [
+    {
+      "type": "fix",
+      "zh": "修复自动更新检查失败（更新清单时间格式不合法），恢复应用内更新",
+      "zh-TW": "修復自動更新檢查失敗（更新清單時間格式不合法），恢復應用內更新",
+      "en": "Fix the broken update check (invalid timestamp in the update manifest) so in-app updates work again",
+      "ja": "自動更新の確認が失敗する問題（更新マニフェストの日時形式が不正）を修正し、アプリ内更新を復旧"
+    },
+    {
+      "type": "improve",
+      "zh": "更新检查增加备用下载源，主站不可用时自动换下一个",
+      "zh-TW": "更新檢查增加備用下載源，主站不可用時自動換下一個",
+      "en": "Update checks now fall back to a second source when the primary one is unavailable",
+      "ja": "更新確認に予備の配布元を追加し、メインが使えないときは次を試すように"
+    }
+  ]
+}

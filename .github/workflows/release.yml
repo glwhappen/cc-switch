@@ -865,7 +865,14 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${TAG#v}"
+          # pub_date 必须是完整 RFC3339（Tauri updater 用 time::OffsetDateTime 严格解析，
+          # 缺 Z/缺秒/空串都会报 "the 'year' component could not be parsed"）。
+          # 这里固定 UTC + 显式格式，并在写完后做一次严格校验，格式不对就让 CI 失败。
           PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          if ! printf '%s' "$PUB_DATE" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'; then
+            echo "❌ PUB_DATE 不是完整 RFC3339：'$PUB_DATE'" >&2
+            exit 1
+          fi
           base_url="https://github.com/$REPO/releases/download/$TAG"
           # 初始化空平台映射
           mac_url=""; mac_sig=""
@@ -980,6 +987,9 @@ jobs:
             echo '  }'
             echo '}'
           } > "$tmp_json"
+          # 生成后立刻严格校验（JSON 合法 + pub_date 是 RFC3339 + version 与 tag 一致 + 平台齐全）。
+          # 自动更新的故障发出去就等于所有客户端静默失联，所以这里硬失败。
+          python3 .github/scripts/validate-updater-manifest.py "$tmp_json" "$VERSION"
           echo "Generated latest.json:" && cat "$tmp_json"
           mv "$tmp_json" release-assets/latest.json
       - name: Upload Release Assets
