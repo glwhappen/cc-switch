@@ -1,0 +1,12 @@
+{
+  "version": "4.0.24",
+  "items": [
+    {
+      "type": "improve",
+      "zh": "从简易模式进高级界面时，不再重复弹欢迎与更新提示",
+      "zh-TW": "從簡易模式進進階介面時，不再重複彈歡迎與更新提示",
+      "en": "No more repeated welcome/update prompts when leaving simple mode",
+      "ja": "かんたんモードから移動したときに、ようこそ画面や更新案内を重ねて出さない"
+    }
+  ]
+}
