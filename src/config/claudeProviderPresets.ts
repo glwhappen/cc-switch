@@ -1155,7 +1155,7 @@ export const providerPresets: ProviderPreset[] = [
     websiteUrl: "https://alltokens.si",
     // 站点关闭了个人注册（/api/status 的 register_enabled=false），只能企业注册
     apiKeyUrl: "https://alltokens.si/enterprise-register",
-    // 官方 HSFP Code 接入文档（alltokens.si/docs/cc-switch/configure）：Anthropic
+    // 官方 CC Switch 接入文档（alltokens.si/docs/cc-switch/configure）：Anthropic
     // base 用站点根。目录里 Claude ID 用点号（claude-sonnet-5.5，非 5-5），没有
     // Haiku（alltokens.si/api/pricing，2026-10-19），故四档全部写明、Haiku 指向 Sonnet
     settingsConfig: {
@@ -2685,7 +2685,7 @@ export const providerPresets: ProviderPreset[] = [
         // non-Claude model ids. The ChatGPT Codex backend catalogs gpt-5.6-sol
         // at a 272K window (Codex budgets 95% of it), not the 1.05M API window;
         // it was 372K until mid-2026 (openai/codex#31860). Same cap as every
-        // GPT window HSFP Code fills (GPT_CONTEXT_WINDOW_CAP). Pin both knobs:
+        // GPT window CC Switch fills (GPT_CONTEXT_WINDOW_CAP). Pin both knobs:
         // the compact window equals min(model window, value), and the routing
         // alias gets a 1M model window, so the compact window is what keeps the
         // trigger under the backend's limit.
@@ -2935,7 +2935,7 @@ export const providerPresets: ProviderPreset[] = [
     apiKeyUrl: "https://moark.com/dashboard/tokens",
     settingsConfig: {
       env: {
-        // 官方文档（HSFP Code 快速配置）指定 Claude Code 走 Anthropic 原生入口
+        // 官方文档（CC Switch 快速配置）指定 Claude Code 走 Anthropic 原生入口
         ANTHROPIC_BASE_URL: "https://moark.com/anthropic",
         ANTHROPIC_AUTH_TOKEN: "",
         ANTHROPIC_MODEL: "deepseek-v4.1-flash[1M]",
