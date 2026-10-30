@@ -379,7 +379,7 @@ jobs:
   macos-binary:
     name: Build macOS binary (${{ matrix.target }})
     needs: whats-new-check
-    runs-on: macos-14
+    runs-on: macos-15  # macOS 14 镜像 2026-11-02 退役，已有计划性 brownout，必须用 15
     environment: release
     strategy:
       matrix:
@@ -451,7 +451,7 @@ jobs:
   # 已经过了 release 的批准，这里再挂会在半路要求第二次批准。secret 都是仓库级的。
   macos-release:
     name: Bundle macOS release
-    runs-on: macos-14
+    runs-on: macos-15  # macOS 14 镜像 2026-11-02 退役，已有计划性 brownout，必须用 15
     needs: macos-binary
     # 没有 Apple 证书时出「未签名」包（首次打开需在系统设置里手动允许）。步骤的 `if:`
     # 读不到 secrets 上下文，所以先在这里映射成 env 再判断；配了证书则走原来的签名+公证流程。
