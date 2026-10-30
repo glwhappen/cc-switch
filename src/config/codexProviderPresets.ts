@@ -133,7 +133,12 @@ function modelCatalog(
 }
 
 export const codexProviderPresets: CodexProviderPreset[] = [
-  // ===== 自有网关预设（品牌定制，置顶）=============================
+  // ===== 自有网关预设（置顶）=======================================
+  // 半价分组只给 deepseek 系模型开了渠道（2026-10-31 实测）：
+  // deepseek-v4.1-flash / deepseek-flash 可用；gpt-5 / codex-1 之类**没有渠道**，
+  // 写进配置会直接 503 model_not_found（No available channel for model ...）。
+  // 所以默认模型必须是 deepseek-v4.1-flash；/v1/responses + wire_api="responses"
+  // 在该分组已实测 200（含 reasoning + message）。
   {
     name: "HSFP",
     websiteUrl: "https://new-api.hsfp.cn",
@@ -143,7 +148,7 @@ export const codexProviderPresets: CodexProviderPreset[] = [
     config: generateThirdPartyConfig(
       "HSFP",
       "https://new-api.hsfp.cn/v1",
-      "codex-1",
+      "deepseek-v4.1-flash",
     ),
     endpointCandidates: ["https://new-api.hsfp.cn/v1"],
     icon: "generic",

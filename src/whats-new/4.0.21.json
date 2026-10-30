@@ -9,6 +9,13 @@
       "ja": "自動更新の確認が失敗する問題（更新マニフェストの日時形式が不正）を修正し、アプリ内更新を復旧"
     },
     {
+      "type": "fix",
+      "zh": "Codex 预设默认模型改为 deepseek-v4.1-flash，修掉选完预设仍报 503 无可用渠道的问题",
+      "zh-TW": "Codex 預設預設模型改為 deepseek-v4.1-flash，修掉選完預設仍報 503 無可用渠道的問題",
+      "en": "Codex preset now defaults to deepseek-v4.1-flash, fixing the 503 \"no available channel\" error after picking the preset",
+      "ja": "Codex プリセットの既定モデルを deepseek-v4.1-flash に変更し、プリセット選択後に 503（利用可能なチャネルなし）になる問題を修正"
+    },
+    {
       "type": "improve",
       "zh": "更新检查增加备用下载源，主站不可用时自动换下一个",
       "zh-TW": "更新檢查增加備用下載源，主站不可用時自動換下一個",
