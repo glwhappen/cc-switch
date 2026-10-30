@@ -1,7 +1,7 @@
 //! Kimi Code serializes refresh-token rotation with proper-lockfile on
 //! `{home}/oauth/<name>`: the lock is the directory `<name>.lock`, it is stale
 //! after 5s without an mtime update, and holders touch it while they work.
-//! CC Switch takes the same lock before writing a credential, so neither side
+//! This app takes the same lock before writing a credential, so neither side
 //! can overwrite a refresh token the other has just rotated.
 //!
 //! Kimi disables the lock on Windows and with `KIMI_DISABLE_OAUTH_LOCK=1`.

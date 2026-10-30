@@ -97,6 +97,7 @@ export interface PendingDeepLinkEntry {
   link: PendingDeepLink;
 }
 
+// 深链 scheme 保留 ccswitch：new-api 控制台的「Open CC Switch」按钮生成的就是这个 scheme，改了用户无法一键导入
 export const deeplinkApi = {
   /**
    * Read the deep link waiting for the frontend; the backend keeps it until acked.
@@ -113,7 +114,7 @@ export const deeplinkApi = {
 
   /**
    * Parse a deep link URL
-   * @param url The ccswitch:// URL to parse
+   * @param url The deep link URL to parse
    * @returns Parsed deep link request
    */
   parseDeeplink: async (url: string): Promise<DeepLinkImportRequest> => {

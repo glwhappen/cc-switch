@@ -616,7 +616,7 @@ mod tests {
             json!({ "env": {} })
         );
 
-        // 用户在 live 里把它改成了 0：不是 CC Switch 写的，保留。
+        // 用户在 live 里把它改成了 0：不是本应用写的，保留。
         let edited = json!({ "env": { "CLAUDE_CODE_DISABLE_ARTIFACT": "0" } });
         assert_eq!(
             project(&edited, Some(&kimi()), &official),
@@ -690,7 +690,7 @@ mod tests {
     }
 
     #[test]
-    fn user_window_values_that_cc_switch_never_sent_are_kept() {
+    fn user_window_values_that_app_never_sent_are_kept() {
         let live = json!({ "env": { "CLAUDE_CODE_MAX_CONTEXT_TOKENS": "500000" } });
         assert_eq!(project(&live, None, &json!({})), live);
     }

@@ -84,7 +84,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "PackyCode",
     websiteUrl: "https://www.packyapi.ai",
-    apiKeyUrl: "https://www.packyapi.ai/register?aff=cc-switch",
+    apiKeyUrl: "https://www.packyapi.ai/register",
     auth: grokAuth(),
     config: grokPresetConfig("PackyCode", "https://www.packyapi.ai/v1"),
     endpointCandidates: [
@@ -184,7 +184,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "OpenModel",
     websiteUrl: "https://www.openmodel.ai",
-    apiKeyUrl: "https://www.openmodel.ai?ref=cc-switch",
+    apiKeyUrl: "https://www.openmodel.ai",
     auth: grokAuth(),
     config: grokPresetConfig("OpenModel", "https://api.openmodel.ai/v1"),
     category: "aggregator",
@@ -210,7 +210,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "DIT.ai",
     websiteUrl: "https://dit.ai",
-    apiKeyUrl: "https://dit.ai?utm_source=ccswitch",
+    apiKeyUrl: "https://dit.ai",
     auth: grokAuth(),
     config: grokPresetConfig("DIT.ai", "https://api.dit.ai/v1", "grok-4.7"),
     category: "aggregator",
@@ -221,7 +221,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "BuyToken",
     websiteUrl: "https://buytoken.work",
-    apiKeyUrl: "https://buytoken.work/sign-up?aff=cc-switch",
+    apiKeyUrl: "https://buytoken.work/sign-up",
     auth: grokAuth(),
     // 须用 grok 分组的 Key；分组里只有 grok-4.7（buytoken.work/pricing，2026-10-23）
     config: grokPresetConfig(
@@ -274,7 +274,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "AIGoCode",
     websiteUrl: "https://aigocode.net",
-    apiKeyUrl: "https://aigocode.net/invite/CC-SWITCH",
+    apiKeyUrl: "https://aigocode.net",
     auth: grokAuth(),
     config: grokPresetConfig("AIGoCode", "https://api.aigocode.dev"),
     endpointCandidates: [
@@ -334,7 +334,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "APIKEY.FUN",
     websiteUrl: "https://apikey.fan",
-    apiKeyUrl: "https://apikey.fan/register?aff=CCSwitch",
+    apiKeyUrl: "https://apikey.fan/register",
     auth: grokAuth(),
     config: grokPresetConfig("APIKEY.FUN", "https://api.apikey.fan/v1"),
     endpointCandidates: [
@@ -378,7 +378,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
     name: "TeamoRouter",
     websiteUrl: "https://teamorouter.cn",
     apiKeyUrl:
-      "https://teamorouter.cn/?utm_source=cc_switch&utm_medium=referral&utm_campaign=ai_directory",
+      "https://teamorouter.cn/?utm_medium=referral&utm_campaign=ai_directory",
     auth: grokAuth(),
     config: grokPresetConfig("TeamoRouter", "https://api.teamorouter.cn/v1"),
     endpointCandidates: [
@@ -420,7 +420,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
     nameKey: "providerForm.presets.ucloud",
     websiteUrl: "https://www.compshare.cn",
     apiKeyUrl:
-      "https://www.compshare.cn/coding-plan?ytag=GPU_YY_YX_git_cc-switch",
+      "https://www.compshare.cn/coding-plan",
     auth: grokAuth(),
     config: grokPresetConfig("Compshare", "https://api.modelverse.cn/v1"),
     endpointCandidates: ["https://api.modelverse.cn/v1"],
@@ -437,7 +437,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
     nameKey: "providerForm.presets.ucloudCoding",
     websiteUrl: "https://www.compshare.cn",
     apiKeyUrl:
-      "https://www.compshare.cn/coding-plan?ytag=GPU_YY_YX_git_cc-switch",
+      "https://www.compshare.cn/coding-plan",
     auth: grokAuth(),
     config: grokPresetConfig(
       "Compshare Coding Plan",
@@ -485,7 +485,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "SoleAPI",
     websiteUrl: "https://soleapi.com",
-    apiKeyUrl: "https://soleapi.com/r/ccswitch",
+    apiKeyUrl: "https://soleapi.com",
     auth: grokAuth(),
     config: grokPresetConfig("SoleAPI", "https://soleapi.com/v1"),
     endpointCandidates: ["https://soleapi.com/v1"],
@@ -510,7 +510,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "RightCode",
     websiteUrl: "https://www.rightapi.ai",
-    apiKeyUrl: "https://www.rightapi.ai/register?aff=CCSWITCH",
+    apiKeyUrl: "https://www.rightapi.ai/register",
     auth: grokAuth(),
     config: grokPresetConfig("RightCode", "https://www.rightapi.ai/codex/v1"),
     category: "third_party",
@@ -522,7 +522,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "Cubence",
     websiteUrl: "https://cubence.com",
-    apiKeyUrl: "https://cubence.com/signup?code=CCSWITCH&source=ccs",
+    apiKeyUrl: "https://cubence.com/signup?source=ccs",
     auth: grokAuth(),
     config: grokPresetConfig("Cubence", "https://api.cubence.com/v1"),
     endpointCandidates: [
@@ -540,7 +540,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
   {
     name: "CrazyRouter",
     websiteUrl: "https://www.crazyrouter.com",
-    apiKeyUrl: "https://www.crazyrouter.com/register?aff=OZcm&ref=cc-switch",
+    apiKeyUrl: "https://www.crazyrouter.com/register?aff=OZcm",
     auth: grokAuth(),
     config: grokPresetConfig("CrazyRouter", "https://cn.crazyrouter.com/v1"),
     endpointCandidates: ["https://cn.crazyrouter.com/v1"],
@@ -565,7 +565,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
     family: "sudocode",
     websiteUrl: "https://sudocode.chat",
     apiKeyUrl:
-      "https://sudocode.chat/sign-up?aff=CC-SWITCH&utm_source=cc-switch&utm_medium=sponsor&utm_campaign=ccswitch",
+      "https://sudocode.chat/sign-up?utm_medium=sponsor",
     auth: grokAuth(),
     config: grokPresetConfig("SudoCode.chat", "https://api.sudocode.chat/v1"),
     endpointCandidates: [
@@ -595,7 +595,7 @@ export const grokBuildProviderPresets: GrokBuildProviderPreset[] = [
     name: "Modelflare",
     websiteUrl: "https://modelflare.dev",
     apiKeyUrl:
-      "https://modelflare.dev/sign-up?utm_medium=referral&utm_source=ccswitch",
+      "https://modelflare.dev/sign-up?utm_medium=referral",
     auth: grokAuth(),
     // 官方 Grok Build 文档（docs.modelflare.dev/guides/clients/grok-build，
     // 2026-10-15 核对）：Responses + /v1、grok-4.5

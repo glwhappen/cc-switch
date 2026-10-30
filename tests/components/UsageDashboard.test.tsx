@@ -267,8 +267,8 @@ describe("UsageDashboard", () => {
 
   it("ignores a remembered tab or range it does not recognise", () => {
     // 「设置」页签已经并进用量设置抽屉
-    localStorage.setItem("cc-switch.usage.tab", "settings");
-    localStorage.setItem("cc-switch.usage.rangePreset", "custom");
+    localStorage.setItem("ai-coding-tools.usage.tab", "settings");
+    localStorage.setItem("ai-coding-tools.usage.rangePreset", "custom");
     renderDashboard();
 
     expect(

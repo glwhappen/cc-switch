@@ -330,7 +330,7 @@ fn file_after(auth_plan: &AuthPlan, live: Option<&Value>) -> Option<Value> {
 }
 
 /// 操作之后 Codex 实际会用的登录，按 `cli_auth_credentials_store`：file 看操作之后的
-/// `auth.json`；keyring 看系统钥匙串（CC Switch 不改它）；auto 钥匙串里有就用它，确定
+/// `auth.json`；keyring 看系统钥匙串（本应用不改它）；auto 钥匙串里有就用它，确定
 /// 没有才同 file（读不出钥匙串时 Codex 可能用着另一个登录，`auth.json` 不能顶替）；
 /// ephemeral 和认不出的没有。`keychain` 只在要看钥匙串时调用。
 fn login_after(
@@ -386,8 +386,8 @@ fn live_is_managed(prepared: &Prepared, live: Option<&Value>) -> bool {
     })
 }
 
-/// 这次操作切到第三方时是否保留 `auth.json` 里的登录。退出 CC Switch 时的分离只是临时
-/// 指回直连，下次启动还要接上代理：照保留登录开关删掉登录，CC Switch 关着时 Codex 桌面版
+/// 这次操作切到第三方时是否保留 `auth.json` 里的登录。退出本应用时的分离只是临时
+/// 指回直连，下次启动还要接上代理：照保留登录开关删掉登录，本应用关着时 Codex 桌面版
 /// 没有 ChatGPT 登录就续不了会话，接上后也回不来（#8431）。
 fn preserve_login(op_name: &str) -> bool {
     op_name == op::DETACH || crate::settings::preserve_codex_official_auth_on_switch()
@@ -503,7 +503,7 @@ fn row_facts(db: &Database) -> Result<RowFacts, AppError> {
                 .and_then(Item::as_str)
                 .map(|url| url.trim().to_string())
         };
-        // 旧版整份写入时，路由表用的是行自己的 id（custom 是 CC Switch 现在写的，不算）。
+        // 旧版整份写入时，路由表用的是行自己的 id（custom 是本应用现在写的，不算）。
         let selector = doc
             .get("model_provider")
             .and_then(Item::as_str)
@@ -522,7 +522,7 @@ fn row_facts(db: &Database) -> Result<RowFacts, AppError> {
             .filter(|url| !url.is_empty())
         {
             facts.retired.push(KnownTable {
-                id: "cc-switch".to_string(),
+                id: "ai-coding-tools".to_string(),
                 base_url,
             });
         }

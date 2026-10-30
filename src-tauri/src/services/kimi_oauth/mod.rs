@@ -1,5 +1,5 @@
 //! Official Kimi Code device login. Credentials stay in Kimi's native file
-//! store. Kimi rotates refresh tokens during model requests; CC Switch only
+//! store. Kimi rotates refresh tokens during model requests; this app only
 //! refreshes (for quota) under the same cross-process lock, see [`lock`].
 mod account;
 mod lock;
@@ -266,7 +266,7 @@ fn new_account(
 }
 
 /// Kimi's own label for its default login ("Kimi 订阅" / "Kimi Subscription"),
-/// in CC Switch's language, so separate accounts sit next to it in the model
+/// in this app's language, so separate accounts sit next to it in the model
 /// picker as `Kimi 订阅 <nickname>`. Kimi only ships Chinese and English.
 fn subscription_label() -> String {
     if crate::tray::tray_language().starts_with("zh") {
@@ -496,7 +496,7 @@ fn identify(request: reqwest::RequestBuilder, device_id: &str) -> reqwest::Reque
         .header("Accept", "application/json")
         .header(
             "User-Agent",
-            concat!("cc-switch/", env!("CARGO_PKG_VERSION")),
+            concat!("ai-coding-tools/", env!("CARGO_PKG_VERSION")),
         )
         .header("X-Msh-Platform", "kimi_code_cli")
         .header("X-Msh-Version", env!("CARGO_PKG_VERSION"))
@@ -919,7 +919,7 @@ impl KimiOAuthManager {
     /// Remove an account from the Authorization Center. Separate accounts lose
     /// their provider, model aliases, credential and saved profile
     /// (`delete_profile`). Kimi's own default login is only hidden from the
-    /// list: CC Switch never logs Kimi out.
+    /// list: this app never logs Kimi out.
     pub async fn remove(
         &self,
         account_id: &str,
@@ -1030,7 +1030,7 @@ async fn remove_at(
     }
     let path = credential_path(home, &provider["oauth"])?;
     let name = account::slot_name(&path);
-    // Only CC Switch's own slots are deleted; a hand-written node pointing at
+    // Only this app's own slots are deleted; a hand-written node pointing at
     // Kimi's default slot must not log Kimi out.
     let owned = name.starts_with("kimi-code-ccs-");
     let _lock = if owned {
@@ -1082,7 +1082,7 @@ pub(crate) fn ensure_profile_signed_in(settings: &Value) -> Result<(), crate::er
 }
 
 /// After deleting a profile whose node Kimi no longer has, also delete the
-/// credential of a CC Switch-owned slot so it does not linger on disk.
+/// credential of a slot owned by this app so it does not linger on disk.
 pub(crate) fn forget_removed_profile(id: &str, settings: &Value) -> Result<(), String> {
     if !kimi_config::is_official_provider(settings) {
         return Ok(());
@@ -1606,7 +1606,7 @@ mod tests {
         assert!(!store_of(dir.path()).is_dismissed(first));
         account::remember(&store, first, known).unwrap();
         assert!(store_of(dir.path()).is_dismissed(first));
-        // Signing in to it again through CC Switch brings it back.
+        // Signing in to it again through this app brings it back.
         fs::remove_file(&first_path).unwrap();
         login_as(&manager, &server, dir.path(), 1).await;
         let status = accounts_status(dir.path(), &store).unwrap();
@@ -1806,7 +1806,7 @@ mod tests {
     }
 
     #[test]
-    fn only_cc_switch_slots_are_deleted_with_a_removed_profile() {
+    fn only_app_slots_are_deleted_with_a_removed_profile() {
         let dir = tempfile::tempdir().unwrap();
         for name in ["kimi-code", "kimi-code-ccs-abc"] {
             atomic_write_private(&dir.path().join(format!("credentials/{name}.json")), b"{}")

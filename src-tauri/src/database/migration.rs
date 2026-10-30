@@ -192,6 +192,7 @@ impl Database {
         tx: &rusqlite::Transaction<'_>,
         config: &MultiAppConfig,
     ) -> Result<(), AppError> {
+        // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
         // v3.10.0+：Skills 的 SSOT 已迁移到文件系统（~/.cc-switch/skills/）+ 数据库统一结构。
         //
         // 旧版 config.json 里的 `skills.skills` 仅记录“安装状态”，但不包含完整元数据，

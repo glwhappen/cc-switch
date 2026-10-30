@@ -47,6 +47,7 @@ pub struct McpConfigResponse {
     pub servers: HashMap<String, serde_json::Value>,
 }
 
+// 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
 /// 获取 MCP 配置（来自 ~/.cc-switch/config.json）
 use std::str::FromStr;
 

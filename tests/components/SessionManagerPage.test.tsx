@@ -78,7 +78,7 @@ const openRow = (title: string) =>
 const openAppMenu = async () =>
   userEvent.click(screen.getByRole("button", { name: /^应用：/ }));
 
-const EXPANDED_KEY = "cc-switch.sessionManager.expandedProjects";
+const EXPANDED_KEY = "ai-coding-tools.sessionManager.expandedProjects";
 
 describe("SessionManagerPage", () => {
   beforeEach(() => {

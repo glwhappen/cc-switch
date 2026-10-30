@@ -18,7 +18,7 @@ import { useSettingsQuery } from "@/lib/query";
 import { markSeen } from "@/lib/whatsNew";
 import type { Settings } from "@/types";
 
-const RELEASES_URL = "https://github.com/farion1231/cc-switch/releases";
+const SITE_URL = "https://cc.hsfp.cn/";
 
 /** 任一应用的数据库里已经有供应商（找到一家就停） */
 async function hasAnyProvider(): Promise<boolean> {
@@ -95,10 +95,8 @@ export function NewLayoutDialog() {
 
   const handleViewReleaseNotes = async () => {
     try {
-      const version = await getVersion();
-      await settingsApi.openExternal(
-        version ? `${RELEASES_URL}/tag/v${version}` : RELEASES_URL,
-      );
+      // 更新日志统一走官网，不再拼上游仓库的 tag 路径
+      await settingsApi.openExternal(SITE_URL);
     } catch (error) {
       console.error("Failed to open release notes:", error);
     }

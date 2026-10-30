@@ -5558,7 +5558,7 @@ mod tests {
         write_jsonl(&plain, &lines);
         assert_eq!(sync_test_file(&db, &plain, &[&plain])?.imported, 1);
 
-        // CC Switch 没赶上第二条用量，文件就被压缩了
+        // 本应用没赶上第二条用量，文件就被压缩了
         lines.push(token_count(200, 100, 20));
         write_jsonl(&plain, &lines);
         let compressed = compress_rollout(&plain);
@@ -5939,14 +5939,15 @@ mod tests {
         }
 
         // 临时 HOME 里只放一个指向真实语料的只读 symlink，避免测试
+        // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
         // 触碰真实 ~/.cc-switch / ~/.codex 下的任何其他内容。
         let temp = tempfile::tempdir().expect("create temp home");
         fs::create_dir_all(temp.path().join(".codex")).expect("mkdir .codex");
         #[cfg(unix)]
         std::os::unix::fs::symlink(&real_sessions, temp.path().join(".codex").join("sessions"))
             .expect("symlink sessions");
-        let previous_home = std::env::var_os("CC_SWITCH_TEST_HOME");
-        std::env::set_var("CC_SWITCH_TEST_HOME", temp.path());
+        let previous_home = std::env::var_os("AI_CODING_TOOLS_TEST_HOME");
+        std::env::set_var("AI_CODING_TOOLS_TEST_HOME", temp.path());
 
         clear_codex_replay_caches();
         // CODEX_REPLAY_DISK=1 时用临时 HOME 下的磁盘库：逐行 autocommit 的
@@ -6022,8 +6023,8 @@ mod tests {
         }
 
         match previous_home {
-            Some(value) => std::env::set_var("CC_SWITCH_TEST_HOME", value),
-            None => std::env::remove_var("CC_SWITCH_TEST_HOME"),
+            Some(value) => std::env::set_var("AI_CODING_TOOLS_TEST_HOME", value),
+            None => std::env::remove_var("AI_CODING_TOOLS_TEST_HOME"),
         }
         Ok(())
     }

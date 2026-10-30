@@ -65,7 +65,7 @@ describe("Hermes provider key shadowed by a built-in provider", () => {
       screen.queryByText(/^Lowercase letters, numbers, and hyphens only/),
     ).not.toBeInTheDocument();
 
-    fireEvent.change(input, { target: { value: "cc-switch-deepseek" } });
+    fireEvent.change(input, { target: { value: "ai-coding-tools-deepseek" } });
     expect(
       screen.queryByTestId("hermes-key-builtin-warning"),
     ).not.toBeInTheDocument();

@@ -3,7 +3,7 @@
 //! 重构不动数据库（不升 schema、不回填、不剥离存量行），降级后旧版直接读这些行，
 //! 所以新增供应商时写进 DB 的字节要保持原样。
 
-use cc_switch_lib::{
+use ai_coding_tools_lib::{
     import_default_config_test_hook, import_provider_from_deeplink, parse_deeplink_url, AppType,
 };
 
@@ -71,7 +71,7 @@ fn deeplink_codex_config_rows() {
             "base_url = \"https://api.relay.example/v1\"\n",
             "wire_api = \"responses\"\n",
             "requires_openai_auth = false\n",
-            "http_headers = { \"x-relay-client\" = \"cc-switch\" }\n",
+            "http_headers = { \"x-relay-client\" = \"ai-coding-tools\" }\n",
             "supports_websockets = true\n",
             "model_catalog_url = \"https://api.relay.example/v1/models?format=codex\"\n",
             "experimental_bearer_token = \"sk-relay-codex\"\n",

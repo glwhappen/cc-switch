@@ -620,19 +620,19 @@ fn wsl_probe_script(tool: &str) -> String {
     format!(
         "sh -c {}",
         shell_single_quote(&format!(
-            "entry=$(command -v {tool}) && real=$(readlink -f -- \"$entry\") && [ -f \"$real\" ] && printf '__CC_SWITCH_UNINSTALL__\\n%s\\n%s\\n' \"$entry\" \"$real\""
+            "entry=$(command -v {tool}) && real=$(readlink -f -- \"$entry\") && [ -f \"$real\" ] && printf '__APP_UNINSTALL__\\n%s\\n%s\\n' \"$entry\" \"$real\""
         ))
     )
 }
 
 #[cfg(any(target_os = "windows", test))]
-const WSL_SHELL_FLAG_MARKER: &str = "__CC_SWITCH_SHELL_FLAG__ ";
+const WSL_SHELL_FLAG_MARKER: &str = "__APP_SHELL_FLAG__ ";
 
 /// Auto mode probe, run by an outer `sh -c`: `$1` is the probe, the remaining
 /// arguments are flags. Like the version check, try each flag in `$SHELL` until
 /// one succeeds (stderr kept only for the last), then report which flag won.
 #[cfg(any(target_os = "windows", test))]
-const WSL_SHELL_PROBE_LAUNCHER: &str = r#"s=${SHELL:-sh}; script=$1; shift; while [ $# -gt 1 ]; do out=$("$s" "$1" "$script" 2>/dev/null) && { printf '__CC_SWITCH_SHELL_FLAG__ %s\n%s\n' "$1" "$out"; exit 0; }; shift; done; out=$("$s" "$1" "$script") && printf '__CC_SWITCH_SHELL_FLAG__ %s\n%s\n' "$1" "$out""#;
+const WSL_SHELL_PROBE_LAUNCHER: &str = r#"s=${SHELL:-sh}; script=$1; shift; while [ $# -gt 1 ]; do out=$("$s" "$1" "$script" 2>/dev/null) && { printf '__APP_SHELL_FLAG__ %s\n%s\n' "$1" "$out"; exit 0; }; shift; done; out=$("$s" "$1" "$script") && printf '__APP_SHELL_FLAG__ %s\n%s\n' "$1" "$out""#;
 
 /// Auto mode removal: run `$1` in `$SHELL` with exactly the probe's flag `$2`.
 /// Never retry with another flag; a different environment could reach another copy.
@@ -690,7 +690,7 @@ impl<'a> WslShell<'a> {
         match self {
             WslShell::Explicit { shell, flag } => vec![*shell, *flag, script],
             WslShell::Auto { flag } => {
-                let mut args = vec!["sh", "-c", WSL_SHELL_PROBE_LAUNCHER, "cc-switch", script];
+                let mut args = vec!["sh", "-c", WSL_SHELL_PROBE_LAUNCHER, "ai-coding-tools", script];
                 match flag {
                     Some(flag) => args.push(*flag),
                     None => args.extend(WSL_AUTO_SHELL_FLAGS),
@@ -707,7 +707,7 @@ impl<'a> WslShell<'a> {
                 "sh",
                 "-c",
                 WSL_SHELL_RUN_LAUNCHER,
-                "cc-switch",
+                "ai-coding-tools",
                 script,
                 auto_flag.unwrap_or("-c"),
             ],
@@ -736,7 +736,7 @@ fn wsl_process(distro: &str, shell_args: &[&str]) -> Result<std::process::Comman
 #[cfg(any(target_os = "windows", test))]
 fn parse_wsl_installation(stdout: &str) -> Result<(String, String), String> {
     let mut lines = stdout
-        .rsplit_once("__CC_SWITCH_UNINSTALL__\n")
+        .rsplit_once("__APP_UNINSTALL__\n")
         .map(|(_, paths)| paths.lines())
         .ok_or(
             "Cannot identify the WSL installation. Use the original installer to uninstall it.",
@@ -883,7 +883,7 @@ mod tests {
         use std::time::Duration;
 
         const TEST_PROBE_TIMEOUT: Duration = Duration::from_secs(30);
-        const FIXTURE_ROOT: &str = "CC_SWITCH_TEST_NPM_UNINSTALL_ROOT";
+        const FIXTURE_ROOT: &str = "AI_CODING_TOOLS_TEST_NPM_UNINSTALL_ROOT";
         if let Some(root) = std::env::var_os(FIXTURE_ROOT) {
             let root = PathBuf::from(root);
             let prefix = root.join("custom npm prefix");
@@ -1291,7 +1291,7 @@ mod tests {
             assert_eq!(last(run(&["-c", "command -v codex"])), base_tool);
 
             let probe = wsl_probe_script("codex");
-            let mut args = vec!["-c", WSL_SHELL_PROBE_LAUNCHER, "cc-switch", &probe];
+            let mut args = vec!["-c", WSL_SHELL_PROBE_LAUNCHER, "ai-coding-tools", &probe];
             args.extend(WSL_AUTO_SHELL_FLAGS);
             let stdout = run(&args);
             let (path, _) = parse_wsl_installation(&stdout).unwrap();
@@ -1301,7 +1301,7 @@ mod tests {
             let removal = run(&[
                 "-c",
                 WSL_SHELL_RUN_LAUNCHER,
-                "cc-switch",
+                "ai-coding-tools",
                 "command -v codex",
                 flag,
             ]);
@@ -1326,12 +1326,12 @@ mod tests {
     fn wsl_shell_flag_must_be_reported_and_known() {
         assert_eq!(
             parse_wsl_shell_flag(
-                "noise\n__CC_SWITCH_SHELL_FLAG__ -lc\n__CC_SWITCH_UNINSTALL__\n/a\n/b\n"
+                "noise\n__APP_SHELL_FLAG__ -lc\n__APP_UNINSTALL__\n/a\n/b\n"
             ),
             Ok("-lc")
         );
-        assert!(parse_wsl_shell_flag("__CC_SWITCH_UNINSTALL__\n/a\n/b\n").is_err());
-        assert!(parse_wsl_shell_flag("__CC_SWITCH_SHELL_FLAG__ -x\n").is_err());
+        assert!(parse_wsl_shell_flag("__APP_UNINSTALL__\n/a\n/b\n").is_err());
+        assert!(parse_wsl_shell_flag("__APP_SHELL_FLAG__ -x\n").is_err());
     }
 
     #[cfg(target_os = "windows")]
@@ -1358,7 +1358,7 @@ mod tests {
         assert_eq!(args, ["-d", "Ubuntu", "--exec", "fish", "-lc", &script]);
         assert!(wsl_process("invalid distro", &[&script]).is_err());
 
-        let launcher = |s: &'static str| ["sh", "-c", s, "cc-switch", script.as_str()];
+        let launcher = |s: &'static str| ["sh", "-c", s, "ai-coding-tools", script.as_str()];
         let auto = WslShell::from_pref(None).unwrap();
         let mut probe = launcher(WSL_SHELL_PROBE_LAUNCHER).to_vec();
         probe.extend(WSL_AUTO_SHELL_FLAGS);
@@ -1577,14 +1577,14 @@ mod tests {
     fn wsl_probe_requires_an_unambiguous_absolute_target() {
         assert_eq!(
             parse_wsl_installation(
-                "login output\n__CC_SWITCH_UNINSTALL__\n/usr/bin/codex\n/opt/codex\n"
+                "login output\n__APP_UNINSTALL__\n/usr/bin/codex\n/opt/codex\n"
             )
             .unwrap(),
             ("/usr/bin/codex".into(), "/opt/codex".into())
         );
-        assert!(parse_wsl_installation("__CC_SWITCH_UNINSTALL__\ncodex\n/opt/codex\n").is_err());
+        assert!(parse_wsl_installation("__APP_UNINSTALL__\ncodex\n/opt/codex\n").is_err());
         assert!(parse_wsl_installation(
-            "__CC_SWITCH_UNINSTALL__\n/usr/bin/codex\n/opt/codex\nextra\n"
+            "__APP_UNINSTALL__\n/usr/bin/codex\n/opt/codex\nextra\n"
         )
         .is_err());
     }

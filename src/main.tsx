@@ -58,6 +58,7 @@ interface ConfigLoadErrorPayload {
 async function handleConfigLoadError(
   payload: ConfigLoadErrorPayload | null,
 ): Promise<void> {
+  // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局
   const path = payload?.path ?? "~/.cc-switch/config.json";
   const detail = payload?.error ?? "Unknown error";
 
@@ -100,7 +101,7 @@ async function bootstrap() {
       ReactDOM.createRoot(document.getElementById("root")!).render(
         <React.StrictMode>
           <FrontendErrorBoundary>
-            <ThemeProvider defaultTheme="system" storageKey="cc-switch-theme">
+            <ThemeProvider defaultTheme="system" storageKey="ai-coding-tools-theme">
               <DatabaseUpgrade payload={initError} />
               <Toaster />
             </ThemeProvider>
@@ -133,7 +134,7 @@ async function bootstrap() {
     <React.StrictMode>
       <FrontendErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="cc-switch-theme">
+          <ThemeProvider defaultTheme="system" storageKey="ai-coding-tools-theme">
             <UpdateProvider>
               {/* 系统开了「减少动态效果」时，framer-motion 的位移动画一律跳过 */}
               <MotionConfig reducedMotion="user">

@@ -4,7 +4,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useSettings } from "@/hooks/useSettings";
 import {
-  useCcSwitchSkillsDir,
+  useAppSkillsDir,
   useInstalledSkills,
   useResyncSkillsToApps,
 } from "@/hooks/useSkills";
@@ -29,7 +29,8 @@ interface SkillsStorageSheetProps {
 
 const appName = (app: string) => APP_DISPLAY_NAME[app as AppId] ?? app;
 
-const DEFAULT_CC_SWITCH_DIR = "~/.cc-switch/skills";
+// 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局
+const DEFAULT_APP_SKILLS_DIR = "~/.cc-switch/skills";
 const UNIFIED_DIR = "~/.agents/skills";
 
 /** 和后端 SyncMethod（auto / symlink / copy）一一对应。 */
@@ -63,16 +64,16 @@ export function SkillsStorageSheet({
   const { t } = useTranslation();
   const { settings, updateSettings, autoSaveSettings } = useSettings();
   const { data: installedSkills } = useInstalledSkills();
-  const { data: ccSwitchDirRaw } = useCcSwitchSkillsDir(open);
+  const { data: appDirRaw } = useAppSkillsDir(open);
   const resyncMutation = useResyncSkillsToApps();
 
   const location: SkillStorageLocation =
-    settings?.skillStorageLocation ?? "cc_switch";
+    settings?.skillStorageLocation ?? "cc_switch"; // 后端序列化值，见 types.ts
   const syncMethod: SkillSyncMethod = settings?.skillSyncMethod ?? "auto";
   const installedCount = installedSkills?.length ?? 0;
-  const ccSwitchDir = ccSwitchDirRaw
-    ? shortenHomePath(ccSwitchDirRaw)
-    : DEFAULT_CC_SWITCH_DIR;
+  const appDir = appDirRaw
+    ? shortenHomePath(appDirRaw)
+    : DEFAULT_APP_SKILLS_DIR;
 
   // 单选只是「想换到哪」；点「移动并切换…」才真正迁移
   const [pendingLocation, setPendingLocation] =
@@ -84,14 +85,14 @@ export function SkillsStorageSheet({
     if (open) setPendingLocation(location);
   }, [open, location]);
 
-  const targetDir = pendingLocation === "unified" ? UNIFIED_DIR : ccSwitchDir;
+  const targetDir = pendingLocation === "unified" ? UNIFIED_DIR : appDir;
   // 对话框里的禁用原因写成看得见的一行（HELP_BRIEF：菜单 / 对话框例外），不挂悬停气泡
   const locationUnchanged = pendingLocation === location;
 
   const doMigrate = async (target: SkillStorageLocation) => {
     setIsMigrating(true);
     setConfirmMove(false);
-    const path = target === "unified" ? UNIFIED_DIR : ccSwitchDir;
+    const path = target === "unified" ? UNIFIED_DIR : appDir;
     try {
       const result = await skillsApi.migrateStorage(target);
       if (result.errors.length > 0) {
@@ -133,7 +134,7 @@ export function SkillsStorageSheet({
 
   const handleOpenFolder = async () => {
     try {
-      await skillsApi.openCcSwitchSkillsDir();
+      await skillsApi.openAppSkillsDir();
     } catch (error) {
       toast.error(t("common.error"), {
         description: extractErrorMessage(error) || String(error),
@@ -221,14 +222,14 @@ export function SkillsStorageSheet({
                   <code
                     id="skills-storage-cc-path"
                     className="min-w-0 truncate font-mono text-caption text-fg-2"
-                    title={ccSwitchDirRaw ?? ccSwitchDir}
+                    title={appDirRaw ?? appDir}
                   >
-                    {ccSwitchDir}
+                    {appDir}
                   </code>
                   <button
                     type="button"
                     aria-label={t("skills.storageSheet.openFolderAria", {
-                      path: ccSwitchDir,
+                      path: appDir,
                     })}
                     onClick={() => void handleOpenFolder()}
                     className="shrink-0 whitespace-nowrap text-caption font-medium text-fg-1 underline decoration-border-strong underline-offset-[3px] hover:decoration-fg-1"

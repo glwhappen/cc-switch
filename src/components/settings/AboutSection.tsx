@@ -20,7 +20,7 @@ import { useUpdate } from "@/contexts/UpdateContext";
 import { Badge } from "@/components/ui/badge";
 import { WhatsNewDialog } from "@/components/WhatsNewDialog";
 import { WHATS_NEW_ENTRIES, entriesUpTo } from "@/lib/whatsNew";
-import ccswitchLogo from "@/assets/icons/logo.svg";
+import appLogo from "@/assets/icons/logo.svg";
 import { extractErrorMessage } from "@/utils/errorUtils";
 
 interface AboutSectionProps {
@@ -31,7 +31,7 @@ interface AboutSectionProps {
 let appVersionCache: string | null = null;
 
 // 邀 Star 条关掉后记在本机（纯界面偏好，不进库、不随云同步）
-const STAR_PROMPT_DISMISSED_KEY = "ccswitch:about:starPromptDismissed";
+const STAR_PROMPT_DISMISSED_KEY = "ai-coding-tools:about:starPromptDismissed";
 
 function readStarPromptDismissed(): boolean {
   try {
@@ -95,31 +95,16 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
 
   const handleOpenReleaseNotes = useCallback(async () => {
     try {
-      const targetVersion = updateInfo?.availableVersion ?? version ?? "";
-      const displayVersion = targetVersion.startsWith("v")
-        ? targetVersion
-        : targetVersion
-          ? `v${targetVersion}`
-          : "";
-
-      if (!displayVersion) {
-        await settingsApi.openExternal(
-          "https://github.com/farion1231/cc-switch/releases",
-        );
-        return;
-      }
-
-      await settingsApi.openExternal(
-        `https://github.com/farion1231/cc-switch/releases/tag/${displayVersion}`,
-      );
+      // 官网是唯一的更新日志入口，不再经过上游仓库页
+      await settingsApi.openExternal("https://cc.hsfp.cn/");
     } catch (error) {
       console.error("[AboutSection] Failed to open release notes", error);
       toast.error(t("settings.openReleaseNotesFailed"));
     }
-  }, [t, updateInfo?.availableVersion, version]);
+  }, [t]);
 
   const handleOpenGithub = useCallback(() => {
-    void settingsApi.openExternal("https://github.com/farion1231/cc-switch");
+    void settingsApi.openExternal("https://cc.hsfp.cn/");
   }, []);
 
   const handleDismissStarPrompt = useCallback(() => {
@@ -198,13 +183,13 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
     <div className="divide-y divide-border overflow-hidden rounded-panel border border-border bg-surface">
       <div className="flex flex-wrap items-center gap-4 px-5 py-4">
         <img
-          src={ccswitchLogo}
+          src={appLogo}
           alt=""
           draggable={false}
           className="h-10 w-10 shrink-0 p-1"
         />
         <div className="min-w-0 flex-1">
-          <div className="text-title text-fg-1">CC Switch</div>
+          <div className="text-title text-fg-1">AI Coding Tools</div>
           <div className="flex flex-wrap items-center gap-2 text-caption text-fg-2">
             {isLoadingVersion ? (
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -314,8 +299,8 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
         )}
       </div>
 
-      {/* 下载与更新都走 ccswitch.io，用户不再经过仓库页，邀 Star 单独占一行；按钮即 GitHub 入口。
-          关掉后链接行补回 GitHub 按钮 */}
+      {/* 下载与更新都走官网 cc.hsfp.cn，用户不再经过仓库页；这一行是对上游开源项目的
+          礼貌性说明，关掉后链接行补回入口按钮 */}
       {!starPromptDismissed && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3 bg-action-soft py-3.5 ps-5 pe-3">
           <div className="flex min-w-0 flex-1 items-center gap-3">

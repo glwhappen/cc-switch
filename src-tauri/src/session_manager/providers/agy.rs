@@ -15,6 +15,7 @@ use std::{
 
 /// Antigravity CLI keeps sessions in `~/.gemini/antigravity-cli/brain`, while the IDE writes the
 /// same layout to `~/.gemini/antigravity/brain`. API-key providers run agy with a private
+// 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
 /// `--gemini_dir` (`~/.cc-switch/agy/<provider>/`), so their sessions live under that directory's
 /// `antigravity-cli/brain`. All of them are scanned.
 pub fn session_roots() -> Vec<PathBuf> {
@@ -384,11 +385,13 @@ mod tests {
             sessions[0].resume_command.as_deref(),
             Some("agy --conversation=abc-123")
         );
+        // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
         let private = Path::new("/home/me/.cc-switch/agy/relay");
         assert_eq!(
             scan_root(dir.path(), Some(private))[0]
                 .resume_command
                 .as_deref(),
+            // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
             Some("agy --gemini_dir=/home/me/.cc-switch/agy/relay --conversation=abc-123")
         );
         let messages = load_messages(&file).unwrap();

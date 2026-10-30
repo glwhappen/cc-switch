@@ -1,11 +1,11 @@
-//! 写入引擎：CC Switch 改客户端文件的唯一底层路径。
+//! 写入引擎：本应用改客户端文件的唯一底层路径。
 //!
 //! 一次写入分几步：读字节并记下 hash → 按格式解析，解析失败就停 → 在内存里改关键字段
 //! → 序列化成新字节（[`plan`]）→ 写好临时文件（[`stage`]）→ 发布前对这个文件做一次
 //! 字节级备份（每个文件只做一次）→ 最后重读一次比对 hash，没变才 rename，变了就以
 //! 新内容为底重算。多文件操作的写前意图和崩溃恢复在 `mode::operation`。
 //!
-//! 冲突检测是乐观的：CC Switch 自己的写入方共用 [`lock_app`] 这把锁，彼此不会覆盖；
+//! 冲突检测是乐观的：本应用自己的写入方共用 [`lock_app`] 这把锁，彼此不会覆盖；
 //! Claude Code 这类外部进程不参与这把锁，「重读比对」和 rename 之间仍有一个极小的
 //! 窗口，外部写入恰好落在里面时仍会被覆盖。
 
@@ -24,6 +24,7 @@ use super::patch::{LivePatch, LiveWriteError};
 
 /// 这台设备自己的状态目录：`live-state.json` 和首写备份都放在这里。
 ///
+// 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
 /// 路径固定为 `get_home_dir()/.cc-switch`，和 `settings.json` 一样不跟随配置目录
 /// 覆盖：覆盖目录可能指向网盘同步目录，而写前意图和备份都是这台设备的事实。
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -33,6 +34,7 @@ pub struct DeviceStore {
 
 impl DeviceStore {
     pub fn for_device() -> Self {
+        // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
         Self::at(crate::config::get_home_dir().join(".cc-switch"))
     }
 
@@ -160,7 +162,7 @@ pub fn stage(planned: &Planned) -> Result<Option<StagedWrite>, AppError> {
 /// 给第一次用新版的用户一道保险：万一引擎有 bug，还能找回升级前的原文件。以文件的
 /// 绝对路径为键，每个文件只备份一次；备份在 `<device>/backups/live-first-write/`，
 /// 旁边的 `.source` 记着原路径。写入前文件不存在时只记 `.source`，以后也不再备份
-/// （那时的内容是 CC Switch 自己写的）。
+/// （那时的内容是本应用自己写的）。
 pub fn ensure_first_write_backup(
     store: &DeviceStore,
     path: &Path,
@@ -183,7 +185,7 @@ pub fn ensure_first_write_backup(
     atomic_write_private(&marker, path.to_string_lossy().as_bytes())
 }
 
-/// 一个应用的写锁：CC Switch 里改这个应用客户端文件的所有写入方（切换、编辑器、
+/// 一个应用的写锁：本应用里改这个应用客户端文件的所有写入方（切换、编辑器、
 /// 模式操作、托盘）都要先拿到它。不可重入。
 #[derive(Debug)]
 pub struct AppWriteGuard {

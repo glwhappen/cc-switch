@@ -51,7 +51,7 @@ function applyColorScheme(isDark: boolean) {
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "cc-switch-theme",
+  storageKey = "ai-coding-tools-theme",
 }: ThemeProviderProps) {
   const getInitialTheme = () => {
     if (typeof window === "undefined") {

@@ -68,6 +68,7 @@ fn create_backup(conflicts: &[EnvConflict]) -> Result<BackupInfo, String> {
 /// Get backup directory path
 pub(crate) fn backup_dir() -> Result<PathBuf, String> {
     let home = dirs::home_dir().ok_or("无法获取用户主目录")?;
+    // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
     Ok(home.join(".cc-switch").join("backups"))
 }
 

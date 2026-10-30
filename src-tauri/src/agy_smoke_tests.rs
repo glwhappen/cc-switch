@@ -7,8 +7,8 @@ struct RestoreHome(Option<std::ffi::OsString>);
 impl Drop for RestoreHome {
     fn drop(&mut self) {
         match self.0.take() {
-            Some(value) => std::env::set_var("CC_SWITCH_TEST_HOME", value),
-            None => std::env::remove_var("CC_SWITCH_TEST_HOME"),
+            Some(value) => std::env::set_var("AI_CODING_TOOLS_TEST_HOME", value),
+            None => std::env::remove_var("AI_CODING_TOOLS_TEST_HOME"),
         }
         let _ = crate::settings::reload_settings();
     }
@@ -51,8 +51,8 @@ async fn agy_live_provider_skill_session_and_tokens() {
     let settings: Value = serde_json::from_slice(&fs::read(config).unwrap()).unwrap();
     let temp = tempfile::tempdir().unwrap();
     let home = temp.path();
-    let _restore = RestoreHome(std::env::var_os("CC_SWITCH_TEST_HOME"));
-    std::env::set_var("CC_SWITCH_TEST_HOME", home);
+    let _restore = RestoreHome(std::env::var_os("AI_CODING_TOOLS_TEST_HOME"));
+    std::env::set_var("AI_CODING_TOOLS_TEST_HOME", home);
     crate::settings::reload_settings().unwrap();
     fs::create_dir_all(home.join("workspace")).unwrap();
     let db = Arc::new(Database::memory().unwrap());
@@ -65,7 +65,7 @@ async fn agy_live_provider_skill_session_and_tokens() {
         .expect("smoke fixture must be an API-key provider")
         .join("antigravity-cli/settings.json");
     let key = settings["env"]["GEMINI_API_KEY"].as_str().unwrap();
-    // The key stays out of every file CC Switch writes.
+    // The key stays out of every file this app writes.
     assert!(!String::from_utf8_lossy(&fs::read(&private_settings).unwrap()).contains(key));
     assert!(
         !String::from_utf8_lossy(&fs::read(agy_config::settings_path()).unwrap_or_default())

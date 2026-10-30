@@ -1,9 +1,9 @@
-//! Oh My Pi (`omp`, can1357/oh-my-pi) owns its defaults and login. CC Switch manages only the
+//! Oh My Pi (`omp`, can1357/oh-my-pi) owns its defaults and login. This app manages only the
 //! explicit `providers` entries in `models.yml` and the MCP servers in `mcp.json`, and reads
 //! `config.yml` for the default model.
 //!
 //! The agent dir is `~/.omp/agent`, or `~/.omp/profiles/<name>/agent` for a named profile.
-//! models.yml is edited as text: bytes outside the one entry CC Switch writes are never touched,
+//! models.yml is edited as text: bytes outside the one entry this app writes are never touched,
 //! and a document it can't edit safely (anchors, tags, flow style) is refused, not rewritten.
 
 use crate::config::{atomic_write_private, get_home_dir};
@@ -434,7 +434,7 @@ const DISCOVERY_TYPES: &[&str] = &[
     "apple-foundation-models",
 ];
 
-/// Validate the one node CC Switch writes. Other providers in the file are never judged.
+/// Validate the one node this app writes. Other providers in the file are never judged.
 pub(crate) fn validate_provider(id: &str, node: &Value) -> Result<(), AppError> {
     if id.trim().is_empty() {
         return Err(invalid_provider());
@@ -833,12 +833,12 @@ pub(crate) fn provider_base_url(config: &Value) -> Result<String, AppError> {
         .ok_or_else(|| AppError::InvalidInput("Oh My Pi provider has no request URL".to_string()))
 }
 
-/// The key CC Switch's own usage queries should send for an omp `apiKey` value.
+/// The key this app's own usage queries should send for an omp `apiKey` value.
 ///
 /// omp reads the value as an environment variable name first and falls back to the literal
 /// string when that variable is unset or empty; unlike Pi there is no `$NAME` syntax. Besides
 /// the process environment it reads `.env` in the agent dir, the config root and home, in that
-/// order. Values starting with `!` are shell commands, which CC Switch never runs, so they give
+/// order. Values starting with `!` are shell commands, which this app never runs, so they give
 /// an empty key instead of being sent as the credential.
 pub(crate) fn resolve_usage_api_key(value: &str) -> String {
     let dotenv_files: Vec<PathBuf> = [get_omp_agent_dir(), get_omp_config_root()]
@@ -914,7 +914,7 @@ fn dotenv_value(path: &Path, name: &str) -> Option<String> {
 // Settings (config.yml), read only
 // ============================================================================
 
-/// The provider part of `modelRoles.default` (`<provider>/<model>`). CC Switch never writes it.
+/// The provider part of `modelRoles.default` (`<provider>/<model>`). This app never writes it.
 pub(crate) fn read_default_provider_id() -> Result<Option<String>, AppError> {
     let document = parse(&read_text(&get_omp_settings_path()?)?.1)?;
     Ok(document

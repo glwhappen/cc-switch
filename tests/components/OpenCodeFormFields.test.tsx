@@ -383,7 +383,7 @@ describe("OpenCodeFormFields", () => {
   it("passes a User-Agent provider header as the model fetch user agent", async () => {
     vi.mocked(fetchModelsForConfig).mockResolvedValue([]);
     renderOpenCodeForm({
-      headers: { "User-Agent": "cc-switch-test" },
+      headers: { "User-Agent": "ai-coding-tools-test" },
     });
 
     fireEvent.click(
@@ -396,8 +396,8 @@ describe("OpenCodeFormFields", () => {
       "sk-test",
       undefined,
       undefined,
-      "cc-switch-test",
-      { requestHeaders: { "User-Agent": "cc-switch-test" } },
+      "ai-coding-tools-test",
+      { requestHeaders: { "User-Agent": "ai-coding-tools-test" } },
     );
   });
 
@@ -430,7 +430,7 @@ describe("OpenCodeFormFields", () => {
       { id: "old-model", ownedBy: null },
     ]);
     const { props, rerender } = renderOpenCodeForm({
-      headers: { "X-Title": "CC Switch" },
+      headers: { "X-Title": "AI Coding Tools" },
     });
     fireEvent.click(screen.getByRole("button", { name: FETCH }));
     const dialog = await screen.findByRole("dialog");
@@ -486,27 +486,27 @@ describe("OpenCodeFormFields", () => {
   it("surfaces existing provider headers", () => {
     renderOpenCodeForm({
       headers: {
-        "HTTP-Referer": "https://cc-switch.app",
-        "X-Title": "CC Switch",
+        "HTTP-Referer": "https://example.com",
+        "X-Title": "AI Coding Tools",
       },
     });
 
     expect(screen.getByDisplayValue("HTTP-Referer")).toBeInTheDocument();
     expect(
-      screen.getByDisplayValue("https://cc-switch.app"),
+      screen.getByDisplayValue("https://example.com"),
     ).toBeInTheDocument();
     expect(screen.getByDisplayValue("X-Title")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("CC Switch")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("AI Coding Tools")).toBeInTheDocument();
   });
 
   it("updates provider headers", () => {
     const onHeadersChange = vi.fn();
     renderOpenCodeForm({
-      headers: { "X-Title": "CC Switch" },
+      headers: { "X-Title": "AI Coding Tools" },
       onHeadersChange,
     });
 
-    fireEvent.change(screen.getByDisplayValue("CC Switch"), {
+    fireEvent.change(screen.getByDisplayValue("AI Coding Tools"), {
       target: { value: "OpenCode" },
     });
 
@@ -537,7 +537,7 @@ describe("OpenCodeFormFields", () => {
   it("removes provider headers", () => {
     const onHeadersChange = vi.fn();
     renderOpenCodeForm({
-      headers: { "X-Title": "CC Switch" },
+      headers: { "X-Title": "AI Coding Tools" },
       onHeadersChange,
     });
 
@@ -564,7 +564,7 @@ describe("OpenCodeFormFields", () => {
   it("restores an existing header name when it is cleared", () => {
     const onHeadersChange = vi.fn();
     renderOpenCodeForm({
-      headers: { "X-Title": "CC Switch" },
+      headers: { "X-Title": "AI Coding Tools" },
       onHeadersChange,
     });
 

@@ -50,7 +50,7 @@ pub(super) struct Store {
     #[serde(default)]
     pub accounts: BTreeMap<String, Identity>,
     /// Native logins the user removed from the list (user id, or the provider
-    /// id when the identity was unknown). CC Switch never logs Kimi out.
+    /// id when the identity was unknown). This app never logs Kimi out.
     #[serde(default)]
     pub dismissed: Vec<String>,
 }
@@ -106,7 +106,7 @@ pub(super) fn remember(path: &Path, id: &str, identity: Identity) -> Result<(), 
     })
 }
 
-/// Remember an account the user just signed in to through CC Switch, which
+/// Remember an account the user just signed in to through this app, which
 /// always brings a hidden native login back.
 pub(super) fn remember_login(path: &Path, id: &str, identity: Identity) -> Result<(), String> {
     update_store(path, |store| {

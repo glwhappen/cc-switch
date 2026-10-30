@@ -18,6 +18,8 @@ pub fn parse_deeplink_url(url_str: &str) -> Result<DeepLinkImportRequest, AppErr
         .map_err(|e| AppError::InvalidInput(format!("Invalid deep link URL: {e}")))?;
 
     // Validate scheme
+    // 深链 scheme 保留 "ccswitch"：new-api 控制台的「一键导入」按钮生成的就是这个 scheme，
+    // 改了用户就不能一键导入（白牌只换品牌文案，不改协议字符串）。
     let scheme = url.scheme();
     if scheme != "ccswitch" {
         return Err(AppError::InvalidInput(format!(

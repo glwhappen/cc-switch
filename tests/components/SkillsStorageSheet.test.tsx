@@ -38,14 +38,14 @@ vi.mock("@/hooks/useSettings", () => ({
 
 vi.mock("@/hooks/useSkills", () => ({
   useInstalledSkills: () => ({ data: m.installed }),
-  useCcSwitchSkillsDir: () => ({ data: "/Users/jason/.cc-switch/skills" }),
+  useAppSkillsDir: () => ({ data: "/Users/jason/.cc-switch/skills" }),
   useResyncSkillsToApps: () => ({ mutateAsync: m.resync, isPending: false }),
 }));
 
 vi.mock("@/lib/api/skills", () => ({
   skillsApi: {
     migrateStorage: m.migrate,
-    openCcSwitchSkillsDir: m.openDir,
+    openAppSkillsDir: m.openDir,
   },
 }));
 
@@ -100,7 +100,7 @@ describe("SkillsStorageSheet", () => {
     });
   });
 
-  it("shows the real CC Switch folder and opens it", async () => {
+  it("shows the real app folder and opens it", async () => {
     m.openDir.mockResolvedValue(undefined);
     renderDialog();
 

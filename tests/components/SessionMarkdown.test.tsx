@@ -1,4 +1,4 @@
-// 底本：farion1231/cc-switch#6332 的 tests/components/SessionMessageItem.test.tsx。
+// 底本：上游#6332 的 tests/components/SessionMessageItem.test.tsx。
 // 迁入后直接测 SessionMarkdown；原先依赖旧 SessionMessageItem 的折叠与
 // 「原文中的匹配」用例改为断言导出的 createCollapsedMarkdownPreview /
 // hasHighlightableMarkdownMatch（片段展示由阅读页组件负责）。
@@ -261,7 +261,7 @@ describe("SessionMarkdown", () => {
 
   it("renders table rows using only semantic cell elements", () => {
     const { container } = renderMarkdown(
-      ["| Name | Status |", "| --- | --- |", "| CC Switch | Ready |"].join(
+      ["| Name | Status |", "| --- | --- |", "| AI Coding Tools | Ready |"].join(
         "\n",
       ),
     );

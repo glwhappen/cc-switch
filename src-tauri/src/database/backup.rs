@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard};
 use tempfile::{Builder, NamedTempFile};
 
-const CC_SWITCH_SQL_EXPORT_HEADER: &str = "-- CC Switch SQLite 导出";
+const DB_SQL_EXPORT_HEADER: &str = "-- 本应用 SQLite 导出";
 
 /// Bound combined INSERT batches while still amortizing statement parsing.
 /// A row larger than this cap is emitted alone because it cannot be split.
@@ -38,7 +38,7 @@ const IMPORT_ALLOWED_PRAGMAS: &[&str] = &["foreign_keys", "user_version"];
 
 /// 执行外部 SQL 期间的 authorizer：拒绝一切能**离开临时数据库文件**的动作。
 ///
-/// 头部校验（`validate_cc_switch_sql_export`）只比较一个注释前缀，任何人都能在
+/// 头部校验（`validate_app_sql_export`）只比较一个注释前缀，任何人都能在
 /// 合法前缀后面接着写别的语句。`ATTACH DATABASE '/path/x.db'` 的副作用发生在
 /// 暂存库的 schema 校验之前，导入即使最终失败，文件也已经被创建；而 `settings`
 /// 表不在 `SYNC_SKIP_TABLES` / `SYNC_PRESERVE_TABLES` 之列，WebDAV/S3 同步会走
@@ -180,7 +180,7 @@ impl Database {
         F: FnOnce() -> Result<(), AppError>,
     {
         let sql_content = sql_raw.trim_start_matches('\u{feff}');
-        Self::validate_cc_switch_sql_export(sql_content)?;
+        Self::validate_app_sql_export(sql_content)?;
 
         // 在临时数据库执行导入，确保失败不会污染主库
         let temp_file = NamedTempFile::new().map_err(|e| AppError::IoContext {
@@ -280,16 +280,16 @@ impl Database {
         }
     }
 
-    fn validate_cc_switch_sql_export(sql: &str) -> Result<(), AppError> {
+    fn validate_app_sql_export(sql: &str) -> Result<(), AppError> {
         let trimmed = sql.trim_start();
-        if trimmed.starts_with(CC_SWITCH_SQL_EXPORT_HEADER) {
+        if trimmed.starts_with(DB_SQL_EXPORT_HEADER) {
             return Ok(());
         }
 
         Err(AppError::localized(
             "backup.sql.invalid_format",
-            "仅支持导入由 CC Switch 导出的 SQL 备份文件。",
-            "Only SQL backups exported by CC Switch are supported.",
+            "仅支持导入由本应用导出的 SQL 备份文件。",
+            "Only SQL backups exported by this app are supported.",
         ))
     }
 
@@ -512,7 +512,7 @@ impl Database {
     where
         F: FnOnce(&Path, &Path) -> Result<(), AppError>,
     {
-        let db_path = get_app_config_dir().join("cc-switch.db");
+        let db_path = get_app_config_dir().join("ai-coding-tools.db");
         if !db_path.exists() {
             return Ok(None);
         }
@@ -533,6 +533,7 @@ impl Database {
         // discovery and retention only see the final path after the complete
         // SQLite image has been atomically published.
         let mut temp_path = Builder::new()
+            // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
             .prefix(".cc-switch-backup-")
             .suffix(".tmp")
             .tempfile_in(&backup_dir)
@@ -671,7 +672,7 @@ impl Database {
         ))
     }
 
-    /// Validate that the external SQL created a recognizable CC Switch schema.
+    /// Validate that the external SQL created a recognizable this app schema.
     ///
     /// These tables all existed in the oldest supported SQL-export schema
     /// (v3.8.x). Checking before migrations keeps header-only/truncated files
@@ -698,8 +699,8 @@ impl Database {
             let names = missing.join(", ");
             return Err(AppError::localized(
                 "backup.sql.invalid_schema",
-                format!("导入的 SQL 缺少 CC Switch 必需表：{names}"),
-                format!("The imported SQL is missing required CC Switch tables: {names}"),
+                format!("导入的 SQL 缺少本应用必需表：{names}"),
+                format!("The imported SQL is missing tables required by this app: {names}"),
             ));
         }
         Ok(())
@@ -714,7 +715,7 @@ impl Database {
             .unwrap_or(0);
 
         output.push_str(&format!(
-            "-- CC Switch SQLite 导出\n-- 生成时间: {timestamp}\n-- user_version: {user_version}\n"
+            "-- 本应用 SQLite 导出\n-- 生成时间: {timestamp}\n-- user_version: {user_version}\n"
         ));
         output.push_str("PRAGMA foreign_keys=OFF;\n");
         output.push_str(&format!("PRAGMA user_version={user_version};\n"));
@@ -1196,14 +1197,15 @@ mod tests {
     impl TestHomeGuard {
         fn new() -> Self {
             let temp_dir = tempfile::tempdir().expect("create isolated test home");
-            let previous_test_home = std::env::var_os("CC_SWITCH_TEST_HOME");
-            std::env::set_var("CC_SWITCH_TEST_HOME", temp_dir.path());
+            let previous_test_home = std::env::var_os("AI_CODING_TOOLS_TEST_HOME");
+            std::env::set_var("AI_CODING_TOOLS_TEST_HOME", temp_dir.path());
             // Prevent the Windows legacy-HOME fallback without mutating HOME:
             // an existing default DB keeps get_app_config_dir() anchored under
-            // CC_SWITCH_TEST_HOME and makes import exercise its safety backup.
+            // AI_CODING_TOOLS_TEST_HOME and makes import exercise its safety backup.
+            // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
             let config_dir = temp_dir.path().join(".cc-switch");
             std::fs::create_dir_all(&config_dir).expect("create isolated config directory");
-            std::fs::File::create(config_dir.join("cc-switch.db"))
+            std::fs::File::create(config_dir.join("ai-coding-tools.db"))
                 .expect("create isolated database sentinel");
             let guard = Self {
                 previous_test_home,
@@ -1226,8 +1228,8 @@ mod tests {
     impl Drop for TestHomeGuard {
         fn drop(&mut self) {
             match self.previous_test_home.as_ref() {
-                Some(previous) => std::env::set_var("CC_SWITCH_TEST_HOME", previous),
-                None => std::env::remove_var("CC_SWITCH_TEST_HOME"),
+                Some(previous) => std::env::set_var("AI_CODING_TOOLS_TEST_HOME", previous),
+                None => std::env::remove_var("AI_CODING_TOOLS_TEST_HOME"),
             }
         }
     }
@@ -1266,13 +1268,13 @@ mod tests {
         for (label, template) in cases {
             let target = test_home
                 .path()
-                .join(format!("cc-switch-authorizer-{label}.sqlite"));
+                .join(format!("ai-coding-tools-authorizer-{label}.sqlite"));
 
             // 合法的导出头 + 越界语句。头部校验只比前缀，这份输入过得了它，
             // 真正拦下来的必须是 authorizer。
             let malicious = format!(
                 "{}\n{}\n",
-                super::CC_SWITCH_SQL_EXPORT_HEADER,
+                super::DB_SQL_EXPORT_HEADER,
                 template.replace("{path}", &target.to_string_lossy().replace('\'', "''"))
             );
 
@@ -1451,14 +1453,14 @@ mod tests {
 
         let header_only = format!(
             "{}\nPRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\nCOMMIT;\n",
-            super::CC_SWITCH_SQL_EXPORT_HEADER
+            super::DB_SQL_EXPORT_HEADER
         );
         let error = target
             .import_sql_string(&header_only)
             .expect_err("缺少原始 schema 的文件必须被拒绝");
         assert!(
-            error.to_string().contains("required CC Switch tables")
-                || error.to_string().contains("CC Switch 必需表"),
+            error.to_string().contains("tables required by this app")
+                || error.to_string().contains("本应用必需表"),
             "应由原始 schema 校验拒绝，实际错误: {error}"
         );
 
@@ -1567,7 +1569,7 @@ mod tests {
 
         let invalid_sql = format!(
             "{}\nBEGIN TRANSACTION;\nCREATE TABLE partial (id INTEGER);\nTHIS IS NOT SQL;\n",
-            super::CC_SWITCH_SQL_EXPORT_HEADER
+            super::DB_SQL_EXPORT_HEADER
         );
         assert!(target.import_sql_string(&invalid_sql).is_err());
 
@@ -1603,7 +1605,7 @@ mod tests {
         let exported = source.export_sql_string()?;
         let truncated = exported
             .strip_suffix("COMMIT;\nPRAGMA foreign_keys=ON;\n")
-            .expect("CC Switch export should end with a committed transaction");
+            .expect("this app export should end with a committed transaction");
 
         let target = Database::memory()?;
         {
@@ -1651,7 +1653,7 @@ mod tests {
              INSERT INTO skills (key, installed, installed_at)
              VALUES ('claude:legacy-skill', 1, 1700000000);
              COMMIT;\nPRAGMA foreign_keys=ON;\n",
-            super::CC_SWITCH_SQL_EXPORT_HEADER,
+            super::DB_SQL_EXPORT_HEADER,
             crate::database::tests::V3_8_SCHEMA_V1_SQL,
         );
 
@@ -2514,6 +2516,7 @@ mod tests {
                 entry
                     .file_name()
                     .to_string_lossy()
+                    // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
                     .starts_with(".cc-switch-backup-")
             })
             .count();

@@ -27,7 +27,7 @@ pub fn check_env_conflicts(app: &str) -> Result<Vec<EnvConflict>, String> {
 
     // Check shell configuration files (Unix only). The process environment is
     // deliberately not scanned here: it is inherited from whatever launched
-    // CC Switch (e.g. Claude Desktop injects ANTHROPIC_BASE_URL into the
+    // This app (e.g. Claude Desktop injects ANTHROPIC_BASE_URL into the
     // terminals it spawns, so `pnpm dev` started there always "conflicts"),
     // and such variables cannot be removed from inside the app anyway.
     #[cfg(not(target_os = "windows"))]
@@ -222,7 +222,7 @@ mod tests {
     #[cfg(not(target_os = "windows"))]
     #[test]
     fn inherited_process_env_is_not_reported_on_unix() {
-        const VAR: &str = "ANTHROPIC_CC_SWITCH_INHERITED_PROBE";
+        const VAR: &str = "ANTHROPIC_APP_INHERITED_PROBE";
         std::env::set_var(VAR, "https://api.anthropic.com");
         let conflicts = check_env_conflicts("claude");
         std::env::remove_var(VAR);

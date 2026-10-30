@@ -27,6 +27,7 @@ pub struct Provider {
     /// 备注信息
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<String>,
+    // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
     /// 供应商元数据（不写入 live 配置，仅存于 ~/.cc-switch/config.json）
     #[serde(skip_serializing_if = "Option::is_none")]
     pub meta: Option<ProviderMeta>,
@@ -404,7 +405,7 @@ pub enum ClaudeDesktopMode {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ClaudeDesktopModelRoute {
-    /// 真实上游模型名，只保存在 CC Switch 内部，不写入 Claude Desktop profile。
+    /// 真实上游模型名，只保存在本应用内部，不写入 Claude Desktop profile。
     pub model: String,
     /// Claude Desktop 模型菜单显示名；写入 profile 的 `labelOverride`。
     #[serde(rename = "labelOverride", skip_serializing_if = "Option::is_none")]
@@ -1741,7 +1742,7 @@ mod tests {
 
     #[test]
     fn resolve_credentials_pi_never_sends_key_references_literally() {
-        for reference in ["$CC_SWITCH_TEST_UNSET_8822", "!echo sk-from-command"] {
+        for reference in ["$AI_CODING_TOOLS_TEST_UNSET_8822", "!echo sk-from-command"] {
             let p = provider_with(json!({
                 "baseUrl": "https://api.example.com/v1",
                 "apiKey": reference,

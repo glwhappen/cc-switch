@@ -3,7 +3,7 @@
  *
  * Hermes resolves `model.provider` to its built-in provider whenever the name
  * IS a canonical built-in id (`hermes_cli/runtime_provider_custom.py`,
- * `_shadowed_by_builtin`: `auth.resolve_provider(name) == name`). A CC Switch
+ * `_shadowed_by_builtin`: `auth.resolve_provider(name) == name`). An app
  * card whose provider key is one of these ids is then ignored: Hermes asks for
  * the built-in's own credential (e.g. `MINIMAX_API_KEY`) and never uses the
  * card's base URL or API key. Names that are merely aliases (`kimi` →

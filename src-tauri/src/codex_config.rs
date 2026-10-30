@@ -16,13 +16,13 @@ use std::fs;
 use std::process::{Command, Stdio};
 use toml_edit::DocumentMut;
 
-pub const CC_SWITCH_CODEX_MODEL_PROVIDER_ID: &str = "custom";
+pub const APP_CODEX_MODEL_PROVIDER_ID: &str = "custom";
 /// Temporary model-provider id used while the built-in `codex-official`
-/// provider is routed through CC Switch.  A dedicated id is an ownership
+/// provider is routed through this app.  A dedicated id is an ownership
 /// marker: unlike a generic localhost `base_url`, it can be detected and
 /// cleaned up without mistaking a user's own local provider for takeover.
-pub const CC_SWITCH_CODEX_OFFICIAL_PROXY_PROVIDER_ID: &str = "cc-switch-official";
-pub const CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME: &str = "cc-switch-model-catalog.json";
+pub const AI_CODING_TOOLS_CODEX_OFFICIAL_PROXY_PROVIDER_ID: &str = "official";
+pub const APP_CODEX_MODEL_CATALOG_FILENAME: &str = "model-catalog.json";
 
 #[cfg(target_os = "windows")]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -32,7 +32,7 @@ pub(crate) const CODEX_WEB_SEARCH_FIELD: &str = "web_search";
 /// Value that disables the web-search tool. Some native `/responses` gateways
 /// reject a `web_search` tool with `responses_feature_not_supported` ("tool type
 /// 'web_search' is not supported by this gateway phase"), so for those we write
-/// this per the vendors' official Codex docs. Also doubles as cc-switch's
+/// this per the vendors' official Codex docs. Also doubles as ai-coding-tools's
 /// ownership sentinel: we only ever remove a `web_search` key whose value equals
 /// this string, never a user's own setting.
 pub(crate) const CODEX_WEB_SEARCH_DISABLED: &str = "disabled";
@@ -161,7 +161,7 @@ const CODEX_MANAGED_OAUTH_LIVE_AUTH_MARKER_FILENAME: &str = "codex_managed_oauth
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct CodexManagedOAuthLiveAuthMarker {
     version: u32,
-    /// cc-switch 本地托管账号 ID，用于区分同一 ChatGPT workspace 下的登录。
+    /// ai-coding-tools 本地托管账号 ID，用于区分同一 ChatGPT workspace 下的登录。
     account_id: String,
     /// 原生 auth.json 的 `tokens.account_id`，即 ChatGPT workspace ID。
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -210,7 +210,7 @@ impl CodexLiveStateSnapshot {
 
 /// Which Codex tool surface the generated model catalog should target.
 ///
-/// - `ProxyChat`: cc-switch's proxy takes over and converts Responses<->Chat,
+/// - `ProxyChat`: ai-coding-tools's proxy takes over and converts Responses<->Chat,
 ///   so the catalog keeps Codex's default tool set (incl. the freeform
 ///   `apply_patch` custom tool, which the proxy rewrites to a function tool).
 /// - `NativeResponses`: Codex talks directly to a provider's native
@@ -225,7 +225,7 @@ pub enum CodexCatalogToolProfile {
     /// hosted web-search endpoint, which Copilot does not expose.
     Copilot,
     NativeResponses,
-    /// Codex talks (through cc-switch's proxy) to a native Anthropic Messages
+    /// Codex talks (through ai-coding-tools's proxy) to a native Anthropic Messages
     /// gateway. Like `NativeResponses` it must suppress Codex's freeform custom
     /// tools — the Responses→Anthropic transform keeps only `function` tools.
     /// Additionally the Codex `web_search` hosted tool is unusable on this path
@@ -294,7 +294,7 @@ pub(crate) fn codex_managed_oauth_live_auth_marker_exists() -> bool {
 /// 仅接受 ChatGPT 登录形状（`auth_mode == "chatgpt"`、`OPENAI_API_KEY` 可清空）。
 /// 托管账号写入的完整 bundle 会额外带 `tokens.refresh_token` 与顶层 `last_refresh`，
 /// 这里一并容忍。Codex CLI 自刷新会轮换 access_token，因此短期 token 指纹不能
-/// 作为稳定的所有权谓词；cc-switch 的本地账号 ID 单独记录在 marker 中。
+/// 作为稳定的所有权谓词；ai-coding-tools 的本地账号 ID 单独记录在 marker 中。
 fn extract_codex_managed_oauth_account_id(auth: &Value) -> Option<String> {
     let auth_obj = auth.as_object()?;
 
@@ -391,7 +391,7 @@ pub(crate) fn test_codex_id_token(subject: &str) -> String {
     format!("{header}.{payload}.")
 }
 
-/// Build the native-shaped ChatGPT auth bundle shared by cc-switch and Codex CLI.
+/// Build the native-shaped ChatGPT auth bundle shared by ai-coding-tools and Codex CLI.
 pub fn codex_managed_oauth_auth_value(
     account_id: &str,
     access_token: &str,
@@ -625,7 +625,7 @@ pub(crate) fn clear_codex_managed_oauth_live_auth_marker_for_account(
 /// 切走托管 provider 或从认证中心删除账号时，清理其残留在
 /// `~/.codex/auth.json` 的 ChatGPT 登录。
 ///
-/// 删除谓词同时校验 cc-switch marker 中的本地账号 ID 与原生 auth.json 中的
+/// 删除谓词同时校验 ai-coding-tools marker 中的本地账号 ID 与原生 auth.json 中的
 /// workspace ID，不依赖会被 Codex CLI 自刷新破坏的 access-token 指纹。切换路径必须
 /// 先把盘上轮换后的 refresh token 采纳回 manager，再调用本函数。
 pub fn clear_codex_live_auth_for_managed_account(account_id: &str) -> Result<(), AppError> {
@@ -695,10 +695,10 @@ pub fn clear_codex_live_auth_for_managed_account_if_unchanged(
     Ok(())
 }
 
-/// 判断给定的 Codex `auth` 是否属于指定的 cc-switch 本地托管账号。
+/// 判断给定的 Codex `auth` 是否属于指定的 ai-coding-tools 本地托管账号。
 ///
 /// 原生 `tokens.account_id` 是 workspace ID，可能被多个本地账号共享；因此必须同时
-/// 命中 cc-switch marker 中的本地账号 ID，不能只按 auth.json 内容判断。
+/// 命中 ai-coding-tools marker 中的本地账号 ID，不能只按 auth.json 内容判断。
 ///
 /// 用于 Live 备份剥离：避免把托管账号的可刷新 token 持久化进备份配置。
 pub fn codex_live_auth_is_managed_chatgpt_login(auth: &Value, account_id: &str) -> bool {
@@ -785,7 +785,7 @@ pub(crate) fn read_codex_live_auth_refresh_for_managed_account(
 ///
 /// The write is compare-and-swap-like: immediately before replacing auth.json,
 /// it verifies that the file still contains the refresh token used for the
-/// network request. Codex CLI does not share cc-switch's process lock, so this
+/// network request. Codex CLI does not share ai-coding-tools's process lock, so this
 /// is a best-effort guard that narrows (but cannot make atomic) the cross-process
 /// check-to-replace window.
 /// Ownership is local-account scoped through the marker, while auth.json keeps
@@ -834,7 +834,7 @@ pub fn get_codex_config_path() -> PathBuf {
 }
 
 pub fn get_codex_model_catalog_path() -> PathBuf {
-    get_codex_config_dir().join(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME)
+    get_codex_config_dir().join(APP_CODEX_MODEL_CATALOG_FILENAME)
 }
 
 /// 原子写 Codex 的 `auth.json` 与 `config.toml`，在第二步失败时回滚第一步
@@ -1831,7 +1831,7 @@ impl std::fmt::Display for CodexBundledModelsError {
 }
 
 /// 本机 Codex 自带的完整模型列表（`codex debug models --bundled`）。和账号无关，版本和
-/// 那个二进制一致。不能用不带 `--bundled` 的版本：那会读到 CC Switch 自己写的目录。
+/// 那个二进制一致。不能用不带 `--bundled` 的版本：那会读到本应用自己写的目录。
 pub(crate) fn load_codex_bundled_models() -> Result<Vec<Value>, CodexBundledModelsError> {
     first_bundled_catalog(codex_cli_candidates(), |catalog| {
         catalog
@@ -1979,7 +1979,7 @@ fn load_codex_native_responses_template() -> Value {
 }
 
 /// Hosts whose native `/responses` gateway publishes an OFFICIAL Codex model
-/// catalog (models.json) that cc-switch mirrors verbatim. Matched against
+/// catalog (models.json) that ai-coding-tools mirrors verbatim. Matched against
 /// `base_url` ONLY — deliberately NOT by model brand, unlike
 /// `CODEX_WEB_SEARCH_REJECT_MODEL_PREFIXES`: the official entries GRANT
 /// capabilities (freeform `apply_patch`, vendor harness), and an aggregator
@@ -2007,7 +2007,7 @@ fn load_codex_deepseek_official_catalog_models() -> Vec<Value> {
 
 /// Official vendor catalog entries for the provider in `config_text`, if its
 /// gateway ships one. Only the `NativeResponses` profile qualifies: ProxyChat
-/// runs through cc-switch's converter (classic tool template contract) and the
+/// runs through ai-coding-tools's converter (classic tool template contract) and the
 /// Anthropic transform drops custom tools, so both must keep their existing
 /// templates. Host-driven like the web_search blacklist, so existing providers
 /// pick it up on their next switch without a re-save.
@@ -2224,7 +2224,7 @@ pub(crate) fn apply_codex_auto_review_model(catalog: &mut Value, model: &str) ->
 }
 
 /// Codex 自带的 OpenAI 官方模型列表（`codex debug models --bundled`），给第三方的 GPT
-/// 行按模型名找官方条目用。只缓存成功读到的列表：Codex 升级后要重启 CC Switch 才换新。
+/// 行按模型名找官方条目用。只缓存成功读到的列表：Codex 升级后要重启本应用才换新。
 #[cfg(not(test))]
 static CODEX_OPENAI_OFFICIAL_MODELS_CACHE: OnceCell<Vec<Value>> = OnceCell::new();
 
@@ -2264,7 +2264,7 @@ fn codex_openai_official_models() -> Vec<Value> {
 
 /// 按 Codex 自己查模型信息的规则找官方条目（codex-rs `models-manager/src/manager.rs` 的
 /// `construct_model_info_from_candidates`）：先按最长前缀，没有再去掉一层命名空间
-/// （`openai/gpt-5.5`）重试；区分大小写。结果就是没有 CC Switch 的目录时 Codex 会用的那条。
+/// （`openai/gpt-5.5`）重试；区分大小写。结果就是没有本应用的目录时 Codex 会用的那条。
 fn find_codex_official_model<'a>(model: &str, candidates: &'a [Value]) -> Option<&'a Value> {
     fn longest_prefix<'a>(model: &str, candidates: &'a [Value]) -> Option<&'a Value> {
         candidates
@@ -2539,7 +2539,7 @@ pub(crate) enum CodexStackRoute<'a> {
 /// 上一家（#8485）。代价是加进第一家、移除最后一家时，路由上原本带值的会话会用路由那家
 /// 自己的模型压缩一次。官方路由的原生行不改：失败时 Codex 会改用当前模型重试，官方的
 /// 压缩语义也要保留。
-const CODEX_STACK_COMP_HASH: &str = "cc-switch";
+const CODEX_STACK_COMP_HASH: &str = "ai-coding-tools";
 
 /// 让一行加入合并目录里共用历史的那组：`comp_hash` 按工具协议分组，同协议的行共用一个值。
 ///
@@ -2728,13 +2728,13 @@ fn sink_row_windows(entry: &mut Value, windows: &RowWindows, third_party: bool) 
 }
 
 /// Reverse of `plan_codex_model_catalog`: read the
-/// cc-switch–maintained catalog file referenced by `~/.codex/config.toml` and
+/// ai-coding-tools–maintained catalog file referenced by `~/.codex/config.toml` and
 /// convert it back into the simplified shape the frontend table uses:
 /// `{ "models": [{ "model", "displayName"?, "contextWindow"?, hidden overrides... }, ...] }`.
 ///
 /// We only reverse-parse catalogs whose `model_catalog_json` path is the
-/// cc-switch–generated file (identified by filename
-/// `cc-switch-model-catalog.json`). A user-managed external catalog file is
+/// ai-coding-tools–generated file (identified by filename
+/// `model-catalog.json`). A user-managed external catalog file is
 /// left alone — surfacing its richer structure as the simplified table would
 /// be a downgrade we can't safely round-trip.
 ///
@@ -2757,7 +2757,7 @@ const MAX_CODEX_CATALOG_BYTES: u64 = 32 * 1024 * 1024;
 pub fn read_codex_model_catalog_simplified_from_live() -> Result<Option<Value>, AppError> {
     let config_text = read_codex_config_text()?;
     let config_dir = get_codex_config_dir();
-    let Some(catalog_path) = resolve_cc_switch_catalog_path(&config_text, &config_dir) else {
+    let Some(catalog_path) = resolve_app_catalog_path(&config_text, &config_dir) else {
         return Ok(None);
     };
     if !catalog_path.exists() {
@@ -2792,16 +2792,16 @@ pub(crate) fn read_limited_string(path: &Path, max_bytes: u64) -> Result<String,
     fs::read_to_string(path).map_err(|error| AppError::io(path, error))
 }
 
-/// Read the cc-switch Codex model catalog file with a size cap.
+/// Read the ai-coding-tools Codex model catalog file with a size cap.
 pub(crate) fn read_codex_model_catalog_text(path: &Path) -> Result<String, AppError> {
     read_limited_string(path, MAX_CODEX_CATALOG_BYTES)
 }
 
-/// Given `config.toml` text, resolve the on-disk path of the cc-switch–owned
+/// Given `config.toml` text, resolve the on-disk path of the ai-coding-tools–owned
 /// catalog file (returns `None` if `model_catalog_json` is absent or points at
 /// a file we don't own). Relative paths are resolved under `base_dir`;
 /// absolute paths must still be inside `base_dir`.
-pub(crate) fn resolve_cc_switch_catalog_path(
+pub(crate) fn resolve_app_catalog_path(
     config_text: &str,
     base_dir: &Path,
 ) -> Option<PathBuf> {
@@ -2816,9 +2816,9 @@ pub(crate) fn resolve_cc_switch_catalog_path(
         .filter(|s| !s.is_empty())?;
 
     let referenced_path = Path::new(catalog_path_str);
-    let is_cc_switch_owned = referenced_path.file_name().and_then(|name| name.to_str())
-        == Some(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME);
-    if !is_cc_switch_owned {
+    let is_app_owned = referenced_path.file_name().and_then(|name| name.to_str())
+        == Some(APP_CODEX_MODEL_CATALOG_FILENAME);
+    if !is_app_owned {
         return None;
     }
 
@@ -2826,7 +2826,7 @@ pub(crate) fn resolve_cc_switch_catalog_path(
     // 被视为绝对路径，从而在下方的包含性校验中失败——此前这类路径会因无法匹配
     // 生成文件名而回退为按文件名解析、碰巧能工作。可接受：下一次切换供应商时
     // 写入侧会重新落一个裸文件名，配置自愈（见
-    // `set_catalog_json_none_removes_cc_switch_owned_by_filename` 的场景注释）。
+    // `set_catalog_json_none_removes_app_owned_by_filename` 的场景注释）。
     let is_unix_absolute = catalog_path_str.starts_with('/');
     let resolved = if referenced_path.is_absolute() || is_unix_absolute {
         referenced_path.to_path_buf()
@@ -2844,7 +2844,7 @@ pub(crate) fn resolve_cc_switch_catalog_path(
     }
 
     // 词法包含不等于运行时包含：配置目录内的符号链接（如 ~/.codex/link ->
-    // /etc）能让 `link/cc-switch-model-catalog.json` 通过上面的检查，读取却
+    // /etc）能让 `link/model-catalog.json` 通过上面的检查，读取却
     // 落到目录外。文件存在时把真实路径 canonicalize 出来再校验一次，并把
     // canonical 路径返回给调用方——后续读取不再经过 symlink 组件。
     if resolved.exists() {
@@ -3071,10 +3071,10 @@ pub fn read_codex_live_settings() -> Result<Value, AppError> {
     Ok(json!({ "auth": auth, "config": cfg_text }))
 }
 
-/// Whether a live Codex config is the official route projected by an older CC Switch
-/// (`model_provider = "cc-switch-official"`).
+/// Whether a live Codex config is the official route projected by an older this app
+/// (`model_provider = "official"`).
 pub fn codex_config_has_official_proxy_route(config_text: &str) -> bool {
-    if !config_text.contains(CC_SWITCH_CODEX_OFFICIAL_PROXY_PROVIDER_ID) {
+    if !config_text.contains(AI_CODING_TOOLS_CODEX_OFFICIAL_PROXY_PROVIDER_ID) {
         return false;
     }
     config_text
@@ -3086,7 +3086,7 @@ pub fn codex_config_has_official_proxy_route(config_text: &str) -> bool {
                 .map(str::to_string)
         })
         .as_deref()
-        == Some(CC_SWITCH_CODEX_OFFICIAL_PROXY_PROVIDER_ID)
+        == Some(AI_CODING_TOOLS_CODEX_OFFICIAL_PROXY_PROVIDER_ID)
 }
 
 /// live 的 `config.toml` 是不是现在的代理官方路由（`is_proxy_url` 认本地代理给 Codex 的
@@ -3105,10 +3105,10 @@ pub fn codex_config_routes_official_to_proxy(
     };
     match doc.get("model_provider").and_then(|item| item.as_str()) {
         None | Some("openai") => same_url(doc.get("openai_base_url")),
-        Some(CC_SWITCH_CODEX_MODEL_PROVIDER_ID) => doc
+        Some(APP_CODEX_MODEL_PROVIDER_ID) => doc
             .get("model_providers")
             .and_then(|item| item.as_table_like())
-            .and_then(|providers| providers.get(CC_SWITCH_CODEX_MODEL_PROVIDER_ID))
+            .and_then(|providers| providers.get(APP_CODEX_MODEL_PROVIDER_ID))
             .and_then(|item| item.as_table_like())
             .is_some_and(|table| {
                 table
@@ -3148,14 +3148,14 @@ pub fn strip_codex_unified_session_bucket(config_text: &str) -> Result<String, A
         .map_err(|e| AppError::Message(format!("Invalid Codex config.toml: {e}")))?;
 
     if doc.get("model_provider").and_then(|item| item.as_str())
-        != Some(CC_SWITCH_CODEX_MODEL_PROVIDER_ID)
+        != Some(APP_CODEX_MODEL_PROVIDER_ID)
     {
         return Ok(config_text.to_string());
     }
     let matches_injected = doc
         .get("model_providers")
         .and_then(|item| item.as_table())
-        .and_then(|providers| providers.get(CC_SWITCH_CODEX_MODEL_PROVIDER_ID))
+        .and_then(|providers| providers.get(APP_CODEX_MODEL_PROVIDER_ID))
         .and_then(|item| item.as_table())
         .is_some_and(table_matches_codex_unified_official_provider);
     if !matches_injected {
@@ -3166,7 +3166,7 @@ pub fn strip_codex_unified_session_bucket(config_text: &str) -> Result<String, A
     let providers_empty = doc["model_providers"]
         .as_table_mut()
         .map(|providers| {
-            providers.remove(CC_SWITCH_CODEX_MODEL_PROVIDER_ID);
+            providers.remove(APP_CODEX_MODEL_PROVIDER_ID);
             providers.is_empty()
         })
         .unwrap_or(false);
@@ -3268,8 +3268,8 @@ mod tests {
     impl CodexLiveTestHome {
         fn new() -> Self {
             let dir = tempfile::tempdir().expect("create isolated Codex live test home");
-            let original_test_home = std::env::var_os("CC_SWITCH_TEST_HOME");
-            std::env::set_var("CC_SWITCH_TEST_HOME", dir.path());
+            let original_test_home = std::env::var_os("AI_CODING_TOOLS_TEST_HOME");
+            std::env::set_var("AI_CODING_TOOLS_TEST_HOME", dir.path());
             crate::settings::reload_settings().expect("reload settings for isolated test home");
 
             Self {
@@ -3282,8 +3282,8 @@ mod tests {
     impl Drop for CodexLiveTestHome {
         fn drop(&mut self) {
             match &self.original_test_home {
-                Some(value) => std::env::set_var("CC_SWITCH_TEST_HOME", value),
-                None => std::env::remove_var("CC_SWITCH_TEST_HOME"),
+                Some(value) => std::env::set_var("AI_CODING_TOOLS_TEST_HOME", value),
+                None => std::env::remove_var("AI_CODING_TOOLS_TEST_HOME"),
             }
             let _ = crate::settings::reload_settings();
         }
@@ -3336,7 +3336,7 @@ mod tests {
         crate::config::write_json_file(&get_codex_auth_path(), &auth).expect("seed live auth R1");
         crate::config::write_text_file(
             &get_codex_config_path(),
-            "# cas-guard-sentinel\nmodel = \"gpt-5.5\"\nmodel_catalog_json = \"cc-switch-model-catalog.json\"\n",
+            "# cas-guard-sentinel\nmodel = \"gpt-5.5\"\nmodel_catalog_json = \"model-catalog.json\"\n",
         )
         .expect("seed live config");
         crate::config::write_json_file(
@@ -4959,20 +4959,20 @@ wire_api = "responses"
     #[test]
     fn resolve_catalog_path_returns_none_when_config_missing_field() {
         let base = PathBuf::from("/tmp/.codex");
-        assert!(resolve_cc_switch_catalog_path("", &base).is_none());
+        assert!(resolve_app_catalog_path("", &base).is_none());
         assert!(
-            resolve_cc_switch_catalog_path("model = \"gpt-5\"", &base).is_none(),
+            resolve_app_catalog_path("model = \"gpt-5\"", &base).is_none(),
             "no model_catalog_json field should yield None"
         );
     }
 
     #[test]
-    fn resolve_catalog_path_accepts_cc_switch_owned_file() {
+    fn resolve_catalog_path_accepts_app_owned_file() {
         let base = PathBuf::from("/tmp/.codex");
-        let config = r#"model_catalog_json = "/tmp/.codex/cc-switch-model-catalog.json"
+        let config = r#"model_catalog_json = "/tmp/.codex/model-catalog.json"
 "#;
-        let resolved = resolve_cc_switch_catalog_path(config, &base).expect("path resolves");
-        assert_eq!(resolved, base.join(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME));
+        let resolved = resolve_app_catalog_path(config, &base).expect("path resolves");
+        assert_eq!(resolved, base.join(APP_CODEX_MODEL_CATALOG_FILENAME));
     }
 
     #[test]
@@ -4981,7 +4981,7 @@ wire_api = "responses"
         let config = r#"model_catalog_json = "/Users/me/.codex/my-handwritten-catalog.json"
 "#;
         assert!(
-            resolve_cc_switch_catalog_path(config, &base).is_none(),
+            resolve_app_catalog_path(config, &base).is_none(),
             "external catalog files should be left alone"
         );
     }
@@ -5721,7 +5721,7 @@ wire_api = "responses"
         assert_eq!(models[1]["comp_hash"], "3000");
         assert_eq!(models[2]["visibility"], "hide", "native visibility stays");
         assert!(models[0].get("auto_compact_token_limit").is_none());
-        assert_eq!(models[3]["comp_hash"], "cc-switch");
+        assert_eq!(models[3]["comp_hash"], "ai-coding-tools");
     }
 
     /// 打开「经典子 agent」后每一行都写 v1（官方行、Stack 行都写）；关着时官方行保持原值，
@@ -5850,7 +5850,7 @@ wire_api = "responses"
         assert_eq!(models[0]["slug"], "deepseek-v4-pro");
         assert_eq!(models[1]["slug"], "ccs-ds/deepseek-v4-pro");
         for model in models {
-            assert_eq!(model["comp_hash"], "cc-switch", "{}", model["slug"]);
+            assert_eq!(model["comp_hash"], "ai-coding-tools", "{}", model["slug"]);
         }
     }
 
@@ -5903,7 +5903,7 @@ wire_api = "responses"
         assert_eq!(mirrored["tool_mode"], "code_mode_only");
         for gpt in &models[..2] {
             assert_eq!(
-                gpt["comp_hash"], "cc-switch-code_mode_only",
+                gpt["comp_hash"], "ai-coding-tools-code_mode_only",
                 "{}",
                 gpt["slug"]
             );
@@ -5912,7 +5912,7 @@ wire_api = "responses"
             }
         }
         assert!(models[2].get("tool_mode").is_none());
-        assert_eq!(models[2]["comp_hash"], "cc-switch");
+        assert_eq!(models[2]["comp_hash"], "ai-coding-tools");
     }
 
     #[test]
@@ -6322,23 +6322,23 @@ wire_api = "responses"
     #[test]
     fn resolve_catalog_finds_relative_filename() {
         let config_text = r#"model_provider = "custom"
-model_catalog_json = "cc-switch-model-catalog.json"
+model_catalog_json = "model-catalog.json"
 "#;
         let base_dir = PathBuf::from("/home/user/.codex");
-        let result = resolve_cc_switch_catalog_path(config_text, &base_dir);
+        let result = resolve_app_catalog_path(config_text, &base_dir);
         assert_eq!(
             result,
-            Some(base_dir.join(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME)),
+            Some(base_dir.join(APP_CODEX_MODEL_CATALOG_FILENAME)),
             "relative filename should resolve under base_dir for file I/O"
         );
     }
 
     #[test]
     fn resolve_catalog_rejects_absolute_path_outside_config_dir() {
-        let config_text = r#"model_catalog_json = "/tmp/secret/cc-switch-model-catalog.json"
+        let config_text = r#"model_catalog_json = "/tmp/secret/model-catalog.json"
 "#;
         let base_dir = PathBuf::from("/home/user/.codex");
-        let result = resolve_cc_switch_catalog_path(config_text, &base_dir);
+        let result = resolve_app_catalog_path(config_text, &base_dir);
         assert_eq!(
             result, None,
             "absolute path outside ~/.codex must not be accepted"
@@ -6347,23 +6347,23 @@ model_catalog_json = "cc-switch-model-catalog.json"
 
     #[test]
     fn resolve_catalog_accepts_absolute_path_inside_config_dir() {
-        let config_text = r#"model_catalog_json = "/home/user/.codex/cc-switch-model-catalog.json"
+        let config_text = r#"model_catalog_json = "/home/user/.codex/model-catalog.json"
 "#;
         let base_dir = PathBuf::from("/home/user/.codex");
-        let result = resolve_cc_switch_catalog_path(config_text, &base_dir);
+        let result = resolve_app_catalog_path(config_text, &base_dir);
         assert_eq!(
             result,
-            Some(base_dir.join(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME)),
+            Some(base_dir.join(APP_CODEX_MODEL_CATALOG_FILENAME)),
             "absolute path inside ~/.codex should be accepted"
         );
     }
 
     #[test]
     fn resolve_catalog_rejects_traversal_to_parent_directory() {
-        let config_text = r#"model_catalog_json = "../cc-switch-model-catalog.json"
+        let config_text = r#"model_catalog_json = "../model-catalog.json"
 "#;
         let base_dir = PathBuf::from("/home/user/.codex");
-        let result = resolve_cc_switch_catalog_path(config_text, &base_dir);
+        let result = resolve_app_catalog_path(config_text, &base_dir);
         assert_eq!(
             result, None,
             "relative traversal outside ~/.codex must not be accepted"
@@ -6373,14 +6373,14 @@ model_catalog_json = "cc-switch-model-catalog.json"
     #[test]
     fn resolve_catalog_rejects_symlink_escaping_config_dir() {
         // 词法包含可被符号链接绕过：~/.codex/link -> 外部目录，
-        // "link/cc-switch-model-catalog.json" 词法上在 base 内，真实读取却落到
+        // "link/model-catalog.json" 词法上在 base 内，真实读取却落到
         // base 外。canonicalize 之后的二次校验必须拒绝。
         let temp = tempfile::tempdir().expect("tempdir");
         let base_dir = temp.path().join("codex");
         let outside_dir = temp.path().join("outside");
         fs::create_dir_all(&base_dir).expect("create base");
         fs::create_dir_all(&outside_dir).expect("create outside");
-        let escaped_file = outside_dir.join(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME);
+        let escaped_file = outside_dir.join(APP_CODEX_MODEL_CATALOG_FILENAME);
         fs::write(&escaped_file, r#"{"models":[]}"#).expect("write escaped catalog");
 
         #[cfg(unix)]
@@ -6394,12 +6394,12 @@ model_catalog_json = "cc-switch-model-catalog.json"
             return;
         }
 
-        let config_text = r#"model_catalog_json = "link/cc-switch-model-catalog.json"
+        let config_text = r#"model_catalog_json = "link/model-catalog.json"
 "#;
-        let result = resolve_cc_switch_catalog_path(config_text, &base_dir);
+        let result = resolve_app_catalog_path(config_text, &base_dir);
         let via_link = base_dir
             .join("link")
-            .join(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME);
+            .join(APP_CODEX_MODEL_CATALOG_FILENAME);
         if via_link.exists() {
             assert_eq!(
                 result, None,
@@ -6421,16 +6421,16 @@ model_catalog_json = "cc-switch-model-catalog.json"
         let temp = tempfile::tempdir().expect("tempdir");
         let base_dir = temp.path().join("codex");
         fs::create_dir_all(&base_dir).expect("create base");
-        let catalog_file = base_dir.join(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME);
+        let catalog_file = base_dir.join(APP_CODEX_MODEL_CATALOG_FILENAME);
         fs::write(&catalog_file, r#"{"models":[]}"#).expect("write catalog");
 
-        let config_text = r#"model_catalog_json = "cc-switch-model-catalog.json"
+        let config_text = r#"model_catalog_json = "model-catalog.json"
 "#;
-        let result = resolve_cc_switch_catalog_path(config_text, &base_dir);
+        let result = resolve_app_catalog_path(config_text, &base_dir);
         let resolved = result.expect("real file inside config dir should be accepted");
         assert_eq!(
             resolved.file_name().and_then(|n| n.to_str()),
-            Some(CC_SWITCH_CODEX_MODEL_CATALOG_FILENAME)
+            Some(APP_CODEX_MODEL_CATALOG_FILENAME)
         );
     }
 

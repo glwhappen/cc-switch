@@ -74,6 +74,7 @@ const sanitizeDir = (value?: string | null): string | undefined => {
 const computeDefaultAppConfigDir = async (): Promise<string | undefined> => {
   try {
     const home = await homeDir();
+    // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局
     return await join(home, ".cc-switch");
   } catch (error) {
     console.error(

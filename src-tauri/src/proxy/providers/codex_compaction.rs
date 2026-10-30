@@ -8,11 +8,11 @@
 //!
 //! 第三方模型产不出 OpenAI 的密文，所以这里把它当普通摘要模型用：禁止发起新的工具调用
 //! （工具定义保留，历史里的调用条目还引用着它们）、在末尾追加
-//! Codex 自己的压缩提示词，再把摘要正文包成 `ccswitch-compaction-v1:` + base64 放进
+//! Codex 自己的压缩提示词，再把摘要正文包成 `app-compaction-v1:` + base64 放进
 //! `encrypted_content`。以后 Codex 在历史里回放这个条目时：
 //! - 发往 Chat / Anthropic 转换：解回摘要正文，作为用户消息；解不开的（别家的密文）
 //!   转换后的格式装不下，换成一句说明，不再静默丢弃。
-//! - 发往原生 Responses（官方和第三方）：CC Switch 包装的摘要转成用户消息；别的密文看不出
+//! - 发往原生 Responses（官方和第三方）：本应用包装的摘要转成用户消息；别的密文看不出
 //!   来源（可能正是这家自己签发的），原样发出，上游明确拒绝后再由 `opaque_state_rectifier`
 //!   换掉。
 
@@ -22,10 +22,10 @@ use bytes::Bytes;
 use futures::stream::{Stream, StreamExt};
 use serde_json::{json, Value};
 
-pub(crate) const CCSWITCH_COMPACTION_PREFIX: &str = "ccswitch-compaction-v1:";
+pub(crate) const APP_COMPACTION_PREFIX: &str = "app-compaction-v1:";
 
-/// CC Switch 自己包装进 `encrypted_content` 的内容都以它开头，官方后端一律解不开。
-const CCSWITCH_ENVELOPE_PREFIX: &str = "ccswitch-";
+/// 本应用自己包装进 `encrypted_content` 的内容都以它开头，官方后端一律解不开。
+const APP_ENVELOPE_PREFIX: &str = "app-";
 
 /// 与 codex-rs `prompts/templates/compact/prompt.md` 一致（Codex 本地压缩用的提示词）。
 pub(crate) const COMPACT_PROMPT: &str = "You are performing a CONTEXT CHECKPOINT COMPACTION. Create a handoff summary for another LLM that will resume the task.
@@ -68,20 +68,20 @@ pub(crate) fn is_compaction_request(body: &Value) -> bool {
 
 pub(crate) fn encode_compaction_summary(summary: &str) -> String {
     format!(
-        "{CCSWITCH_COMPACTION_PREFIX}{}",
+        "{APP_COMPACTION_PREFIX}{}",
         URL_SAFE_NO_PAD.encode(summary.as_bytes())
     )
 }
 
-/// 解开 CC Switch 包装的摘要；别家密文或损坏的内容返回 None。
+/// 解开本应用包装的摘要；别家密文或损坏的内容返回 None。
 pub(crate) fn decode_compaction_summary(encrypted_content: &str) -> Option<String> {
-    let encoded = encrypted_content.strip_prefix(CCSWITCH_COMPACTION_PREFIX)?;
+    let encoded = encrypted_content.strip_prefix(APP_COMPACTION_PREFIX)?;
     let bytes = URL_SAFE_NO_PAD.decode(encoded).ok()?;
     String::from_utf8(bytes).ok()
 }
 
-fn is_ccswitch_envelope(encrypted_content: &str) -> bool {
-    encrypted_content.starts_with(CCSWITCH_ENVELOPE_PREFIX)
+fn is_app_envelope(encrypted_content: &str) -> bool {
+    encrypted_content.starts_with(APP_ENVELOPE_PREFIX)
 }
 
 fn compaction_encrypted_content(item: &Value) -> Option<&str> {
@@ -90,7 +90,7 @@ fn compaction_encrypted_content(item: &Value) -> Option<&str> {
         .filter(|value| !value.is_empty())
 }
 
-/// CC Switch 自己包装的压缩条目，解回摘要正文；别的条目返回 None。
+/// 本应用自己包装的压缩条目，解回摘要正文；别的条目返回 None。
 fn own_compaction_summary(item: &Value) -> Option<String> {
     if !is_compaction_item(item) {
         return None;
@@ -186,7 +186,7 @@ pub(crate) fn compaction_incomplete_reason(finish_reason: Option<&str>) -> Optio
 
 /// 原生 Responses 格式的第三方上游：压缩触发是 Codex 私有协议，普通 Responses 网关收到
 /// 只会回一条普通消息（Codex 照样 Fatal），这里改成和 Chat / Anthropic 转换一样的摘要回合；
-/// CC Switch 包装的压缩摘要谁都解不开，转成用户消息。
+/// 本应用包装的压缩摘要谁都解不开，转成用户消息。
 ///
 /// 别的压缩条目看不出来源，可能正是这家自己签发、能正常解开的，原样发出；上游明确拒绝后
 /// 由 `opaque_state_rectifier` 换成文字重试。请求里没有前两类条目时一个字节都不动。
@@ -280,15 +280,15 @@ pub(crate) fn strip_mismatched_item_id(item: &mut Value, item_type: &str) -> boo
 }
 
 /// 发往官方（ChatGPT 登录直通）前，清理同一线程里第三方回合留下、官方一定会拒的东西：
-/// - CC Switch 包装的压缩摘要：转成用户消息（官方验不了这段"密文"）；
-/// - 推理条目带着 CC Switch 包装的内容（Anthropic thinking 签名），或根本没有
+/// - 本应用包装的压缩摘要：转成用户消息（官方验不了这段"密文"）；
+/// - 推理条目带着本应用包装的内容（Anthropic thinking 签名），或根本没有
 ///   encrypted_content（Chat 转换产出的）：`store:false` 下官方只能靠密文还原推理，
 ///   这类条目要么验签失败、要么按 id 查无此条目（404），整条去掉；
 /// - id 前缀和条目类型对不上（转换器产出的 `resp_…_msg` 等）：去掉 id。
 ///
 /// 纯官方的线程里这些情况都不会出现，请求一个字节都不变（prompt cache 前缀不受影响）；
 /// 同一段混合历史每轮清理结果相同，缓存前缀也稳定。
-pub(crate) fn scrub_ccswitch_state_for_official(body: &mut Value) -> bool {
+pub(crate) fn scrub_app_state_for_official(body: &mut Value) -> bool {
     let stored = body.get("store").and_then(Value::as_bool) == Some(true);
     let Some(items) = body.get_mut("input").and_then(Value::as_array_mut) else {
         return false;
@@ -311,7 +311,7 @@ pub(crate) fn scrub_ccswitch_state_for_official(body: &mut Value) -> bool {
 
         if item_type == "reasoning" {
             let foreign = match compaction_encrypted_content(&item) {
-                Some(encrypted_content) => is_ccswitch_envelope(encrypted_content),
+                Some(encrypted_content) => is_app_envelope(encrypted_content),
                 None => !stored,
             };
             if foreign {
@@ -501,7 +501,7 @@ mod tests {
     #[test]
     fn summary_envelope_round_trips_and_rejects_foreign_blobs() {
         let encoded = encode_compaction_summary("进度：修好了压缩\nnext: test");
-        assert!(encoded.starts_with(CCSWITCH_COMPACTION_PREFIX));
+        assert!(encoded.starts_with(APP_COMPACTION_PREFIX));
         assert_eq!(
             decode_compaction_summary(&encoded).as_deref(),
             Some("进度：修好了压缩\nnext: test")
@@ -655,7 +655,7 @@ mod tests {
             ]
         });
         let before = body.clone();
-        assert!(!scrub_ccswitch_state_for_official(&mut body));
+        assert!(!scrub_app_state_for_official(&mut body));
         assert_eq!(body, before);
     }
 
@@ -666,14 +666,14 @@ mod tests {
             "input": [
                 { "type": "reasoning", "id": "rs_resp_chat", "summary": [{ "type": "summary_text", "text": "t" }] },
                 { "type": "reasoning", "id": "rs_resp_msg_0", "summary": [],
-                  "encrypted_content": "ccswitch-anthropic-thinking-v1:abc" },
+                  "encrypted_content": "app-anthropic-thinking-v1:abc" },
                 { "type": "message", "id": "resp_msg_01_msg_0", "role": "assistant",
                   "content": [{ "type": "output_text", "text": "hi" }] },
                 { "type": "compaction", "id": "cmp_2", "encrypted_content": encode_compaction_summary("done so far") },
                 { "type": "message", "role": "user", "content": "next" }
             ]
         });
-        assert!(scrub_ccswitch_state_for_official(&mut body));
+        assert!(scrub_app_state_for_official(&mut body));
         let input = body["input"].as_array().unwrap();
         assert_eq!(input.len(), 3);
         assert!(input[0].get("id").is_none());

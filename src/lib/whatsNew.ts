@@ -94,6 +94,6 @@ export function changelogUrl(
   version?: string,
 ): string {
   const siteLanguage = language === "zh-TW" ? "zh" : language;
-  const base = `https://ccswitch.io/${siteLanguage}/changelog`;
+  const base = `https://cc.hsfp.cn/${siteLanguage}/changelog`;
   return version ? `${base}/${version}` : base;
 }

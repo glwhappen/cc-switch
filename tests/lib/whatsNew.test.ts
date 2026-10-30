@@ -89,8 +89,8 @@ describe("language and links", () => {
 
   it("links to the website changelog, Traditional Chinese uses the zh pages", () => {
     expect(changelogUrl("en", "4.0.2")).toBe(
-      "https://ccswitch.io/en/changelog/4.0.2",
+      "https://cc.hsfp.cn/en/changelog/4.0.2",
     );
-    expect(changelogUrl("zh-TW")).toBe("https://ccswitch.io/zh/changelog");
+    expect(changelogUrl("zh-TW")).toBe("https://cc.hsfp.cn/zh/changelog");
   });
 });

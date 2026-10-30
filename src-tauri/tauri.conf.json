@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "CC Switch",
+  "productName": "AI Coding Tools",
   "version": "4.0.20",
-  "identifier": "com.ccswitch.desktop",
+  "identifier": "cn.hsfp.aicoding",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3000",

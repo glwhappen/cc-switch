@@ -19,7 +19,7 @@ use crate::mode::state::{self, PendingTarget};
 use crate::provider::{ClaudeDesktopMode, Provider};
 
 pub const PROFILE_ID: &str = "00000000-0000-4000-8000-000000157210";
-pub const PROFILE_NAME: &str = "CC Switch";
+pub const PROFILE_NAME: &str = "AI Coding Tools";
 
 #[cfg(any(target_os = "macos", windows, target_os = "linux", test))]
 const CONFIG_FILE: &str = "claude_desktop_config.json";
@@ -145,7 +145,7 @@ pub fn apply_provider(db: &Database, provider: &Provider) -> Result<(), AppError
 
 /// 写进 Desktop 配置的内容。
 pub enum DesktopTarget<'a> {
-    /// 官方：两个配置文件改回 `1p`，摘掉 CC Switch 的 profile。
+    /// 官方：两个配置文件改回 `1p`，摘掉本应用的 profile。
     Official,
     /// 第三方网关 profile（直连那家的，或指向本地路由的）。
     Profile(&'a Value),
@@ -1221,7 +1221,7 @@ fn write_profile_at_paths(
 }
 
 /// 切回官方：两个配置文件改回 `1p`，清掉旧版写进 `enterpriseConfig` 的网关设置，
-/// 把 CC Switch 的 profile 从 `_meta.json` 里摘掉。
+/// 把本应用的 profile 从 `_meta.json` 里摘掉。
 ///
 /// profile 文件本身保留、只清关键字段：用户在 Desktop 里对这个 profile 改的设置
 /// （#4774 的 auto 模式）下次切回第三方时还在，Key 也从磁盘上清掉了。Desktop 只按
@@ -1346,7 +1346,7 @@ fn gateway_profile_patch(profile: Value) -> JsonPatch {
     patch
 }
 
-/// `configLibrary/_meta.json`：`entries` 里登记 CC Switch 的 profile，`appliedId`
+/// `configLibrary/_meta.json`：`entries` 里登记本应用的 profile，`appliedId`
 /// 指向当前生效的那个。已有条目原位更新，不挪位置。
 struct MetaPatch {
     applied: bool,
@@ -1466,7 +1466,7 @@ fn meta_has_profile_entry(path: &Path) -> bool {
 }
 
 /// Claude Desktop 没有可调的命令，只能推断装没装：它第一次启动就会建自己的数据目录
-/// （`claude_desktop_config.json` 所在的 `Claude`，不看 CC Switch 也会写的 `Claude-3p`），
+/// （`claude_desktop_config.json` 所在的 `Claude`，不看本应用也会写的 `Claude-3p`），
 /// macOS 上另认应用包。
 fn detect_installed(paths: &ClaudeDesktopPaths, app_bundles: &[PathBuf]) -> bool {
     paths.normal_config_path.parent().is_some_and(Path::is_dir)
@@ -1520,7 +1520,7 @@ fn current_platform_paths() -> Result<ClaudeDesktopPaths, AppError> {
 /// not expose a directory override or attempt to recover a host-custom
 /// XDG_CONFIG_HOME: Flatpak replaces that variable with its private path, so
 /// its original host value is not available reliably from the sandbox. Users
-/// with a custom host XDG_CONFIG_HOME should run the native CC Switch package.
+/// with a custom host XDG_CONFIG_HOME should run the native this app package.
 #[cfg(target_os = "linux")]
 fn linux_config_dir() -> PathBuf {
     let xdg_config_home = std::env::var_os("XDG_CONFIG_HOME").map(PathBuf::from);
@@ -1645,6 +1645,7 @@ mod tests {
                 .join("Application Support")
                 .join("Claude-3p"),
         );
+        // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
         paths.device = DeviceStore::at(home.join(".cc-switch"));
         paths
     }
@@ -1717,9 +1718,9 @@ mod tests {
 
     #[cfg(any(target_os = "linux", all(test, unix)))]
     #[test]
-    fn linux_config_dir_uses_host_config_when_cc_switch_runs_in_flatpak() {
+    fn linux_config_dir_uses_host_config_when_app_runs_in_flatpak() {
         let home = Path::new("/home/tester");
-        let private_xdg = Path::new("/home/tester/.var/app/com.ccswitch.desktop/config");
+        let private_xdg = Path::new("/home/tester/.var/app/cn.hsfp.aicoding/config");
 
         assert_eq!(
             linux_config_dir_from_home(home, Some(private_xdg), true),
@@ -1880,7 +1881,7 @@ mod tests {
         let bundle = temp.path().join("Claude.app");
         assert!(!detect_installed(&paths, std::slice::from_ref(&bundle)));
 
-        // 只有 CC Switch 写的 Claude-3p 不算
+        // 只有本应用写的 Claude-3p 不算
         fs::create_dir_all(paths.threep_config_path.parent().unwrap()).unwrap();
         assert!(!detect_installed(&paths, std::slice::from_ref(&bundle)));
 
@@ -2698,7 +2699,7 @@ mod tests {
     }
 
     #[test]
-    fn claude_desktop_restore_switches_to_1p_and_clears_the_cc_switch_profile() {
+    fn claude_desktop_restore_switches_to_1p_and_clears_the_app_profile() {
         let temp = TempDir::new().expect("tempdir");
         let paths = test_paths(temp.path());
         let provider = direct_provider("direct");
@@ -2725,7 +2726,7 @@ mod tests {
             .any(|entry| entry["id"] == json!(PROFILE_ID)));
     }
 
-    /// #4774：用户在 Desktop 里给 CC Switch 的 profile 打开的设置，切换供应商、
+    /// #4774：用户在 Desktop 里给本应用的 profile 打开的设置，切换供应商、
     /// 切回官方再切回来都不能丢；用户收紧过的出站白名单也不能被改回 `*`。
     #[test]
     fn claude_desktop_switches_keep_the_users_own_profile_settings() {

@@ -3,7 +3,7 @@ use std::fs;
 
 use serde_json::json;
 
-use cc_switch_lib::{
+use ai_coding_tools_lib::{
     get_claude_mcp_path, get_claude_mcp_status, get_claude_settings_path, get_grok_config_path,
     import_default_config_test_hook, read_claude_mcp_config, update_settings, AppError,
     AppSettings, AppType, McpApps, McpServer, McpService, MultiAppConfig, ProviderService,
@@ -228,7 +228,7 @@ fn pi_toggle_writes_its_mcp_json_and_keeps_pi_fields() {
     assert_eq!(disabled["exposure"], "direct");
     assert!(!state.db.get_all_mcp_servers().unwrap()["docs"].apps.pi);
 
-    // 在 CC Switch 里删除服务器才删掉条目
+    // 在本应用里删除服务器才删掉条目
     McpService::delete_server(&state, "docs").unwrap();
     assert!(read()["mcpServers"].get("docs").is_none());
 
@@ -367,10 +367,10 @@ fn import_default_config_claude_persists_provider() {
     );
 
     // 验证数据已持久化到数据库（v3.7.0+ 使用 SQLite 而非 config.json）
-    let db_path = home.join(".cc-switch").join("cc-switch.db");
+    let db_path = home.join(" DATADIR ai-coding-tools").join("ai-coding-tools.db");
     assert!(
         db_path.exists(),
-        "importing default config should persist to cc-switch.db"
+        "importing default config should persist to ai-coding-tools.db"
     );
 }
 
@@ -629,10 +629,10 @@ fn import_mcp_from_claude_creates_config_and_enables_servers() {
     );
 
     // 验证数据已持久化到数据库
-    let db_path = home.join(".cc-switch").join("cc-switch.db");
+    let db_path = home.join(" DATADIR ai-coding-tools").join("ai-coding-tools.db");
     assert!(
         db_path.exists(),
-        "state.save should persist to cc-switch.db when changes detected"
+        "state.save should persist to ai-coding-tools.db when changes detected"
     );
 }
 
@@ -934,7 +934,7 @@ fn set_mcp_enabled_for_codex_writes_live_config() {
         "server should have Codex app enabled after toggle"
     );
 
-    let toml_path = cc_switch_lib::get_codex_config_path();
+    let toml_path = ai_coding_tools_lib::get_codex_config_path();
     assert!(
         toml_path.exists(),
         "enabling server should trigger sync to ~/.codex/config.toml"
@@ -1812,7 +1812,7 @@ fn resync_app_reports_each_app_and_leaves_broken_config_untouched() {
     assert_eq!(serialized, json!({"app": "claude", "ok": true}));
 }
 
-fn omp_test_state() -> (cc_switch_lib::AppState, std::path::PathBuf) {
+fn omp_test_state() -> (ai_coding_tools_lib::AppState, std::path::PathBuf) {
     reset_test_fs();
     let path = ensure_test_home().join(".omp/agent/mcp.json");
     fs::create_dir_all(path.parent().unwrap()).unwrap();

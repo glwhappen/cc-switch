@@ -86,7 +86,7 @@ mod switching {
     async fn switching_writes_the_target_and_keeps_the_displaced_login() {
         let (dir, login, manager) = manager();
         add(&manager, "bob").await;
-        // agy 登着一个 CC Switch 还没见过的号
+        // agy 登着一个本应用还没见过的号
         set_live(&login, &credential("alice", "a1"));
 
         manager.switch_to("bob").await.unwrap();
@@ -213,7 +213,7 @@ mod switching {
         assert_eq!(manager.live_account_id().await.as_deref(), Some("bob"));
         assert_eq!(manager.list().await.len(), 2);
 
-        // 在 CC Switch 里删掉的号不再收回来，改问 agy
+        // 在本应用里删掉的号不再收回来，改问 agy
         manager.remove("bob").await.unwrap();
         assert_eq!(manager.live_account_id().await, None);
         assert_eq!(*login.writes.lock().unwrap(), 0);
@@ -224,7 +224,7 @@ mod switching {
     #[test]
     #[ignore]
     fn real_keychain_round_trip_on_a_test_item() {
-        let store = keychain::SystemKeychain::named("cc-switch-agy-selftest", "probe");
+        let store = keychain::SystemKeychain::named("ai-coding-tools-agy-selftest", "probe");
         let first = keychain::encode(&credential("probe", "one")).unwrap();
         store.write(&first).unwrap();
         assert_eq!(store.read().unwrap().as_deref(), Some(first.as_str()));
@@ -235,7 +235,7 @@ mod switching {
             .args([
                 "delete-generic-password",
                 "-s",
-                "cc-switch-agy-selftest",
+                "ai-coding-tools-agy-selftest",
                 "-a",
                 "probe",
             ])
@@ -244,7 +244,7 @@ mod switching {
 }
 
 #[tokio::test]
-async fn removing_from_cc_switch_never_touches_the_keychain() {
+async fn removing_from_app_never_touches_the_keychain() {
     let (_dir, login, manager) = manager();
     add(&manager, "bob").await;
     set_live(&login, &credential("bob", "b1"));

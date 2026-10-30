@@ -1,4 +1,4 @@
-use cc_switch_lib::{
+use ai_coding_tools_lib::{
     AppType, McpApps, McpServer, McpService, Prompt, PromptService, Provider, ProviderService,
 };
 use serde_json::json;
@@ -183,7 +183,7 @@ fn kimi_official_cards_need_a_local_login_and_take_their_own_credential_with_the
     );
     ProviderService::switch(&state, AppType::Kimi, "custom").unwrap();
 
-    // Kimi dropped both nodes: deleting the cards also deletes CC Switch's own
+    // Kimi dropped both nodes: deleting the cards also deletes this app's own
     // credential slot, but never Kimi's default login.
     let only_custom = json!({"default_model":"custom/model", "providers":{"custom":custom},"models":{"custom/model":{"provider":"custom","model":"test","max_context_size":32000}}});
     fs::write(home.config(), toml::to_string(&only_custom).unwrap()).unwrap();

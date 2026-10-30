@@ -31,13 +31,13 @@
 //! | 20 | 进入代理不写 auth.json；第三方路由契约用字面值 `PROXY_MANAGED` | 已有 `codex_official_to_deepseek_then_takeover_...` |
 //! | 21 | 代理下官方路由不写占位凭据，客户端带自己的真实登录 | crate 内：`mode::controller` 的 `codex_routes_between_official_and_third_party_contracts` |
 //! | 22 | 退出代理不覆盖用户此刻的登录状态（期间登出就保持登出，重新登录就保留新登录） | 本文件 |
-//! | 23 | `model_catalog_json` 是关键字段：卡里自带的指针随卡写入；否则有生成的目录写 `cc-switch-model-catalog.json`，没有就删；live 里手写的值不保留 | 本文件 |
-//! | 24 | `web_search = "disabled"` 只删 CC Switch 写的哨兵值，用户的其他值保留 | 本文件 |
+//! | 23 | `model_catalog_json` 是关键字段：卡里自带的指针随卡写入；否则有生成的目录写 `model-catalog.json`，没有就删；live 里手写的值不保留 | 本文件 |
+//! | 24 | `web_search = "disabled"` 只删本应用写的哨兵值，用户的其他值保留 | 本文件 |
 //! | 25 | auth.json 删不掉时切换照常成功，返回 `codex_auth_cleanup_failed` 警告 | 本文件 |
 //!
 //! 只替换关键字段之后新增的性质锁在 crate 内 `mode::controller` 的 `codex_*` 测试里：其余
 //! 字节不动、独有字段只删上一家的值、切回官方留下休眠表、生效的 profile 覆盖选路时拒绝
-//! 写入、只清能证明是 CC Switch 写的旧表、保留登录关闭时删掉的登录切回官方时还回来、
+//! 写入、只清能证明是本应用写的旧表、保留登录关闭时删掉的登录切回官方时还回来、
 //! 切换中途 CLI 刷新了登录就停下、契约相同时不碰客户端文件、编辑器的全局改动。
 //!
 //! 已删除、不再锁的机制：统一会话桶的注入与剥离、回填（token 提回 auth、剥 MCP、保留
@@ -49,7 +49,7 @@ use std::time::SystemTime;
 use serde_json::{json, Value};
 use toml::Table;
 
-use cc_switch_lib::{
+use ai_coding_tools_lib::{
     get_codex_auth_path, get_codex_config_path, update_settings, AppError, AppSettings, AppState,
     AppType, Provider, ProviderMeta, ProviderService,
 };
@@ -429,7 +429,7 @@ fn normalization_never_overwrites_a_user_table() {
     let _guard = test_mutex().lock().unwrap_or_else(|e| e.into_inner());
     reset_test_fs();
     set_login_preservation(false);
-    let user_table = "[model_providers.cc-switch]\nname = \"Mine\"\nbase_url = \"https://mine.example/v1\"\nwire_api = \"responses\"\nhttp_headers = { X-Tenant = \"t1\" }\n";
+    let user_table = "[model_providers DATADIR ai-coding-tools]\nname = \"Mine\"\nbase_url = \"https://mine.example/v1\"\nwire_api = \"responses\"\nhttp_headers = { X-Tenant = \"t1\" }\n";
     let state = setup(
         vec![codex(
             "legacy",
@@ -447,9 +447,9 @@ fn normalization_never_overwrites_a_user_table() {
 
     let doc = live_config();
     assert_key_in_route(&doc, "https://relay.example/v1", "sk-legacy");
-    let mine = table(&doc["model_providers"]["cc-switch"], "cc-switch");
+    let mine = table(&doc["model_providers"]["ai-coding-tools"], "ai-coding-tools");
     let expected: Table = toml::from_str::<Table>(user_table).expect("parse user table")
-        ["model_providers"]["cc-switch"]
+        ["model_providers"]["ai-coding-tools"]
         .as_table()
         .expect("user table")
         .clone();
@@ -667,16 +667,16 @@ fn model_catalog_pointer_ownership() {
     switch(&state, "owned").expect("switch to owned");
     assert_eq!(
         live_config()["model_catalog_json"].as_str(),
-        Some("cc-switch-model-catalog.json")
+        Some("model-catalog.json")
     );
     assert!(get_codex_config_path()
-        .with_file_name("cc-switch-model-catalog.json")
+        .with_file_name("model-catalog.json")
         .exists());
 
     switch(&state, "plain").expect("switch to plain");
     assert!(
         live_config().get("model_catalog_json").is_none(),
-        "CC Switch removes its own pointer when the target has no catalog"
+        "this app removes its own pointer when the target has no catalog"
     );
 
     switch(&state, "user-pointer").expect("switch to user pointer");
@@ -694,11 +694,11 @@ fn model_catalog_pointer_ownership() {
     switch(&state, "owned").expect("switch back to owned");
     assert_eq!(
         live_config()["model_catalog_json"].as_str(),
-        Some("cc-switch-model-catalog.json"),
+        Some("model-catalog.json"),
         "a pointer written into config.toml by hand is replaced like any key field"
     );
     let hand_written = live_config_text().replace(
-        "model_catalog_json = \"cc-switch-model-catalog.json\"",
+        "model_catalog_json = \"model-catalog.json\"",
         "model_catalog_json = \"/Users/me/hand-written.json\"",
     );
     std::fs::write(get_codex_config_path(), hand_written).expect("hand-write a pointer");
@@ -817,7 +817,7 @@ async fn check_proxy_exit_keeps_login(current: &str, after_login: Option<&str>) 
         switch(&state, "relay").expect("switch to relay");
     }
     use_ephemeral_proxy_port(&state).await;
-    cc_switch_lib::mode::controller::enter(&state, &AppType::Codex, false)
+    ai_coding_tools_lib::mode::controller::enter(&state, &AppType::Codex, false)
         .await
         .expect("enter proxy");
     if current == "codex-official" {
@@ -841,7 +841,7 @@ async fn check_proxy_exit_keeps_login(current: &str, after_login: Option<&str>) 
         Some(login) => std::fs::write(get_codex_auth_path(), login).expect("codex login"),
     }
 
-    cc_switch_lib::mode::controller::exit(&state, &AppType::Codex)
+    ai_coding_tools_lib::mode::controller::exit(&state, &AppType::Codex)
         .await
         .expect("exit proxy");
 

@@ -56,7 +56,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "PackyCode",
     websiteUrl: "https://www.packyapi.ai",
-    apiKeyUrl: "https://www.packyapi.ai/register?aff=cc-switch",
+    apiKeyUrl: "https://www.packyapi.ai/register",
     settingsConfig: {
       env: {
         GOOGLE_GEMINI_BASE_URL: "https://www.packyapi.ai",
@@ -120,7 +120,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "OpenModel",
     websiteUrl: "https://www.openmodel.ai",
-    apiKeyUrl: "https://www.openmodel.ai?ref=cc-switch",
+    apiKeyUrl: "https://www.openmodel.ai",
     settingsConfig: {
       env: {
         GOOGLE_GEMINI_BASE_URL: "https://api.openmodel.ai",
@@ -138,7 +138,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "DIT.ai",
     websiteUrl: "https://dit.ai",
-    apiKeyUrl: "https://dit.ai?utm_source=ccswitch",
+    apiKeyUrl: "https://dit.ai",
     // Gemini 原生 /v1beta 在站点根；网关也认 x-goog-api-key（2026-10-21 用假 Key
     // 探测为 invalid_api_key 而非 missing_api_key）
     settingsConfig: {
@@ -207,7 +207,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "AIGoCode",
     websiteUrl: "https://aigocode.net",
-    apiKeyUrl: "https://aigocode.net/invite/CC-SWITCH",
+    apiKeyUrl: "https://aigocode.net",
     settingsConfig: {
       env: {
         GOOGLE_GEMINI_BASE_URL: "https://api.aigocode.dev",
@@ -253,7 +253,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "AICoding",
     websiteUrl: "https://aicoding.inc",
-    apiKeyUrl: "https://aicoding.inc/i/CCSWITCH",
+    apiKeyUrl: "https://aicoding.inc",
     settingsConfig: {
       env: {
         GOOGLE_GEMINI_BASE_URL: "https://api.aicoding.inc",
@@ -312,7 +312,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "APIKEY.FUN",
     websiteUrl: "https://apikey.fan",
-    apiKeyUrl: "https://apikey.fan/register?aff=CCSwitch",
+    apiKeyUrl: "https://apikey.fan/register",
     settingsConfig: {
       env: {
         GOOGLE_GEMINI_BASE_URL: "https://api.apikey.fan",
@@ -418,7 +418,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "SoleAPI",
     websiteUrl: "https://soleapi.com",
-    apiKeyUrl: "https://soleapi.com/r/ccswitch",
+    apiKeyUrl: "https://soleapi.com",
     settingsConfig: {
       env: {
         GOOGLE_GEMINI_BASE_URL: "https://soleapi.com",
@@ -438,7 +438,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "Cubence",
     websiteUrl: "https://cubence.com",
-    apiKeyUrl: "https://cubence.com/signup?code=CCSWITCH&source=ccs",
+    apiKeyUrl: "https://cubence.com/signup?source=ccs",
     settingsConfig: {
       env: {
         GOOGLE_GEMINI_BASE_URL: "https://api.cubence.com",
@@ -463,7 +463,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
   {
     name: "CrazyRouter",
     websiteUrl: "https://www.crazyrouter.com",
-    apiKeyUrl: "https://www.crazyrouter.com/register?aff=OZcm&ref=cc-switch",
+    apiKeyUrl: "https://www.crazyrouter.com/register?aff=OZcm",
     settingsConfig: {
       env: {
         GOOGLE_GEMINI_BASE_URL: "https://cn.crazyrouter.com",
@@ -523,7 +523,7 @@ export const geminiProviderPresets: GeminiProviderPreset[] = [
     name: "Modelflare",
     websiteUrl: "https://modelflare.dev",
     apiKeyUrl:
-      "https://modelflare.dev/sign-up?utm_medium=referral&utm_source=ccswitch",
+      "https://modelflare.dev/sign-up?utm_medium=referral",
     // 官方 Gemini CLI 文档（docs.modelflare.dev/guides/clients/gemini-cli，
     // 2026-10-15 核对）：base 用站点根。Gemini CLI 走 /v1beta，只有
     // modelflare.dev 提供，origin 子域不提供，故不加备用端点

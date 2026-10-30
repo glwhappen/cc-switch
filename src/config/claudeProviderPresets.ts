@@ -120,7 +120,7 @@ export const providerPresets: ProviderPreset[] = [
     regionKey: "cn",
     primePartner: true,
     websiteUrl:
-      "https://platform.kimi.com?track_id=track-7cf2b91dcde043eda6ef9a95951a042c&aff=cc-switch",
+      "https://platform.kimi.com?track_id=track-7cf2b91dcde043eda6ef9a95951a042c",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.moonshot.cn/anthropic",
@@ -143,7 +143,7 @@ export const providerPresets: ProviderPreset[] = [
     planKey: "payg",
     regionKey: "intl",
     websiteUrl:
-      "https://platform.kimi.ai?track_id=track-674ed6e2af924a5682a87421f7cf753a&aff=cc-switch",
+      "https://platform.kimi.ai?track_id=track-674ed6e2af924a5682a87421f7cf753a",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.moonshot.ai/anthropic",
@@ -165,7 +165,7 @@ export const providerPresets: ProviderPreset[] = [
     planKey: "coding",
     regionKey: "cn",
     primePartner: true,
-    websiteUrl: "https://www.kimi.com/code/?aff=cc-switch",
+    websiteUrl: "https://www.kimi.com/code/",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.kimi.com/coding/",
@@ -191,7 +191,7 @@ export const providerPresets: ProviderPreset[] = [
     family: "kimi",
     planKey: "coding",
     regionKey: "intl",
-    websiteUrl: "https://www.kimi.ai/code?aff=cc-switch",
+    websiteUrl: "https://www.kimi.ai/code",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.kimi.ai/coding/",
@@ -211,7 +211,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "PackyCode",
     websiteUrl: "https://www.packyapi.ai",
-    apiKeyUrl: "https://www.packyapi.ai/register?aff=cc-switch",
+    apiKeyUrl: "https://www.packyapi.ai/register",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://www.packyapi.ai",
@@ -333,7 +333,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "OpenModel",
     websiteUrl: "https://www.openmodel.ai",
-    apiKeyUrl: "https://www.openmodel.ai?ref=cc-switch",
+    apiKeyUrl: "https://www.openmodel.ai",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.openmodel.ai",
@@ -365,7 +365,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "DIT.ai",
     websiteUrl: "https://dit.ai",
-    apiKeyUrl: "https://dit.ai?utm_source=ccswitch",
+    apiKeyUrl: "https://dit.ai",
     // 协议文档 dit.ai/docs、模型目录 dit.ai/models（2026-10-21 核对）：Anthropic
     // Messages 在站点根、Key 走 Bearer。Claude 系有 sonnet-5 / opus-5 / sonnet-5-5 /
     // opus-5-5，Haiku 只有带日期的 claude-haiku-4-5-20251001，没有 haiku-5-5
@@ -384,7 +384,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "BuyToken",
     websiteUrl: "https://buytoken.work",
-    apiKeyUrl: "https://buytoken.work/sign-up?aff=cc-switch",
+    apiKeyUrl: "https://buytoken.work/sign-up",
     // 接入文档 buytoken.work/docs（2026-10-23 核对）：Anthropic Messages 在
     // 站点根，Key 按分组发（Claude 分组的 Key 调不了 gpt-*）。Haiku 只有带日期的
     // claude-haiku-4-5-20251001，不带日期会失败
@@ -486,7 +486,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "AIGoCode",
     websiteUrl: "https://aigocode.net",
-    apiKeyUrl: "https://aigocode.net/invite/CC-SWITCH",
+    apiKeyUrl: "https://aigocode.net",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.aigocode.dev",
@@ -524,7 +524,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "AICoding",
     websiteUrl: "https://aicoding.inc",
-    apiKeyUrl: "https://aicoding.inc/i/CCSWITCH",
+    apiKeyUrl: "https://aicoding.inc",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.aicoding.inc",
@@ -592,7 +592,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "APIKEY.FUN",
     websiteUrl: "https://apikey.fan",
-    apiKeyUrl: "https://apikey.fan/register?aff=CCSwitch",
+    apiKeyUrl: "https://apikey.fan/register",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.apikey.fan",
@@ -659,7 +659,7 @@ export const providerPresets: ProviderPreset[] = [
     name: "TeamoRouter",
     websiteUrl: "https://teamorouter.cn",
     apiKeyUrl:
-      "https://teamorouter.cn/?utm_source=cc_switch&utm_medium=referral&utm_campaign=ai_directory",
+      "https://teamorouter.cn/?utm_medium=referral&utm_campaign=ai_directory",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.teamorouter.cn",
@@ -678,7 +678,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "PPIO",
     websiteUrl: "https://ppio.com",
-    apiKeyUrl: "https://ppio.com/activity/ccswitch",
+    apiKeyUrl: "https://ppio.com",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.ppio.com/anthropic",
@@ -717,9 +717,9 @@ export const providerPresets: ProviderPreset[] = [
     family: "volcengine",
     planKey: "agentPlan",
     websiteUrl:
-      "https://www.volcengine.com/activity/agentplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_source=OWO&utm_medium=devrel-1&utm_campaign=hw&utm_term=ccswitch&utm_content=hw",
+      "https://www.volcengine.com/activity/agentplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_source=OWO&utm_medium=devrel-1&utm_campaign=hw&utm_content=hw",
     apiKeyUrl:
-      "https://www.volcengine.com/activity/agentplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_source=OWO&utm_medium=devrel-1&utm_campaign=hw&utm_term=ccswitch&utm_content=hw",
+      "https://www.volcengine.com/activity/agentplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_source=OWO&utm_medium=devrel-1&utm_campaign=hw&utm_content=hw",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://ark.cn-beijing.volces.com/api/plan",
@@ -741,9 +741,9 @@ export const providerPresets: ProviderPreset[] = [
     family: "volcengine",
     planKey: "codingPlan",
     websiteUrl:
-      "https://www.volcengine.com/activity/codingplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
+      "https://www.volcengine.com/activity/codingplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_campaign=hw&utm_medium=devrel_tool_web&utm_source=OWO",
     apiKeyUrl:
-      "https://www.volcengine.com/activity/codingplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
+      "https://www.volcengine.com/activity/codingplan?ac=MMAP8JTTCAQ2&rc=6J6FV5N2&utm_campaign=hw&utm_medium=devrel_tool_web&utm_source=OWO",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://ark.cn-beijing.volces.com/api/coding",
@@ -763,9 +763,9 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "BytePlus",
     websiteUrl:
-      "https://www.byteplus.com/en/product/modelark?utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
+      "https://www.byteplus.com/en/product/modelark?utm_campaign=hw&utm_medium=devrel_tool_web&utm_source=OWO",
     apiKeyUrl:
-      "https://www.byteplus.com/en/product/modelark?utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
+      "https://www.byteplus.com/en/product/modelark?utm_campaign=hw&utm_medium=devrel_tool_web&utm_source=OWO",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL:
@@ -789,9 +789,9 @@ export const providerPresets: ProviderPreset[] = [
     planKey: "payg",
     nameKey: "providerForm.presets.doubaoseed",
     websiteUrl:
-      "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=%7B%7D&utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
+      "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=%7B%7D&utm_campaign=hw&utm_medium=devrel_tool_web&utm_source=OWO",
     apiKeyUrl:
-      "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=%7B%7D&utm_campaign=hw&utm_content=ccswitch&utm_medium=devrel_tool_web&utm_source=OWO&utm_term=ccswitch",
+      "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey?apikey=%7B%7D&utm_campaign=hw&utm_medium=devrel_tool_web&utm_source=OWO",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://ark.cn-beijing.volces.com/api/compatible",
@@ -875,7 +875,7 @@ export const providerPresets: ProviderPreset[] = [
     nameKey: "providerForm.presets.ucloud",
     websiteUrl: "https://www.compshare.cn",
     apiKeyUrl:
-      "https://www.compshare.cn/coding-plan?ytag=GPU_YY_YX_git_cc-switch",
+      "https://www.compshare.cn/coding-plan",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.modelverse.cn",
@@ -896,7 +896,7 @@ export const providerPresets: ProviderPreset[] = [
     nameKey: "providerForm.presets.ucloudCoding",
     websiteUrl: "https://www.compshare.cn",
     apiKeyUrl:
-      "https://www.compshare.cn/coding-plan?ytag=GPU_YY_YX_git_cc-switch",
+      "https://www.compshare.cn/coding-plan",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://cp.compshare.cn",
@@ -949,7 +949,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "SoleAPI",
     websiteUrl: "https://soleapi.com",
-    apiKeyUrl: "https://soleapi.com/r/ccswitch",
+    apiKeyUrl: "https://soleapi.com",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://soleapi.com",
@@ -982,7 +982,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "RightCode",
     websiteUrl: "https://www.rightapi.ai",
-    apiKeyUrl: "https://www.rightapi.ai/register?aff=CCSWITCH",
+    apiKeyUrl: "https://www.rightapi.ai/register",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://www.rightapi.ai/claude",
@@ -998,7 +998,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "Cubence",
     websiteUrl: "https://cubence.com",
-    apiKeyUrl: "https://cubence.com/signup?code=CCSWITCH&source=ccs",
+    apiKeyUrl: "https://cubence.com/signup?source=ccs",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.cubence.com",
@@ -1020,7 +1020,7 @@ export const providerPresets: ProviderPreset[] = [
   {
     name: "CrazyRouter",
     websiteUrl: "https://www.crazyrouter.com",
-    apiKeyUrl: "https://www.crazyrouter.com/register?aff=OZcm&ref=cc-switch",
+    apiKeyUrl: "https://www.crazyrouter.com/register?aff=OZcm",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://cn.crazyrouter.com",
@@ -1056,7 +1056,7 @@ export const providerPresets: ProviderPreset[] = [
     family: "sudocode",
     websiteUrl: "https://sudocode.chat",
     apiKeyUrl:
-      "https://sudocode.chat/sign-up?aff=CC-SWITCH&utm_source=cc-switch&utm_medium=sponsor&utm_campaign=ccswitch",
+      "https://sudocode.chat/sign-up?utm_medium=sponsor",
     settingsConfig: {
       env: {
         ANTHROPIC_BASE_URL: "https://api.sudocode.chat",
@@ -1110,7 +1110,7 @@ export const providerPresets: ProviderPreset[] = [
     name: "Modelflare",
     websiteUrl: "https://modelflare.dev",
     apiKeyUrl:
-      "https://modelflare.dev/sign-up?utm_medium=referral&utm_source=ccswitch",
+      "https://modelflare.dev/sign-up?utm_medium=referral",
     // 官方 Claude Code 文档（docs.modelflare.dev/guides/clients/claude-code，
     // 2026-10-15 核对）：Anthropic 客户端 base 用站点根（不带 /v1）、Key 填
     // AUTH_TOKEN。主模型与 Sonnet / Opus 跟随 Claude Code 默认；Haiku 档按
@@ -1155,7 +1155,7 @@ export const providerPresets: ProviderPreset[] = [
     websiteUrl: "https://alltokens.si",
     // 站点关闭了个人注册（/api/status 的 register_enabled=false），只能企业注册
     apiKeyUrl: "https://alltokens.si/enterprise-register",
-    // 官方 CC Switch 接入文档（alltokens.si/docs/cc-switch/configure）：Anthropic
+    // 官方第三方工具接入文档（alltokens.si/docs/）：Anthropic
     // base 用站点根。目录里 Claude ID 用点号（claude-sonnet-5.5，非 5-5），没有
     // Haiku（alltokens.si/api/pricing，2026-10-19），故四档全部写明、Haiku 指向 Sonnet
     settingsConfig: {
@@ -2685,7 +2685,7 @@ export const providerPresets: ProviderPreset[] = [
         // non-Claude model ids. The ChatGPT Codex backend catalogs gpt-5.6-sol
         // at a 272K window (Codex budgets 95% of it), not the 1.05M API window;
         // it was 372K until mid-2026 (openai/codex#31860). Same cap as every
-        // GPT window CC Switch fills (GPT_CONTEXT_WINDOW_CAP). Pin both knobs:
+        // GPT window filled by this app (GPT_CONTEXT_WINDOW_CAP). Pin both knobs:
         // the compact window equals min(model window, value), and the routing
         // alias gets a 1M model window, so the compact window is what keeps the
         // trigger under the backend's limit.
@@ -2935,7 +2935,7 @@ export const providerPresets: ProviderPreset[] = [
     apiKeyUrl: "https://moark.com/dashboard/tokens",
     settingsConfig: {
       env: {
-        // 官方文档（CC Switch 快速配置）指定 Claude Code 走 Anthropic 原生入口
+        // 官方文档（第三方工具快速配置）指定 Claude Code 走 Anthropic 原生入口
         ANTHROPIC_BASE_URL: "https://moark.com/anthropic",
         ANTHROPIC_AUTH_TOKEN: "",
         ANTHROPIC_MODEL: "deepseek-v4.1-flash[1M]",

@@ -201,12 +201,12 @@ describe("WhatsNewNotice", () => {
       screen.getAllByRole("button", { name: "whatsNew.versionDetails" })[0],
     );
     expect(mocks.openExternal).toHaveBeenCalledWith(
-      "https://ccswitch.io/zh/changelog/4.0.4",
+      "https://cc.hsfp.cn/zh/changelog/4.0.4",
     );
 
     fireEvent.click(screen.getByRole("button", { name: "whatsNew.viewFull" }));
     expect(mocks.openExternal).toHaveBeenLastCalledWith(
-      "https://ccswitch.io/zh/changelog",
+      "https://cc.hsfp.cn/zh/changelog",
     );
     await waitFor(() => expect(title()).not.toBeInTheDocument());
     expect(mocks.save).toHaveBeenCalledWith(

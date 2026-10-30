@@ -11,7 +11,7 @@ use std::path::Path;
 
 use serde_json::json;
 
-use cc_switch_lib::{AppType, ProviderService};
+use ai_coding_tools_lib::{AppType, ProviderService};
 
 use crate::support::{create_test_state, reset_test_fs, test_mutex};
 use crate::util::{assert_golden, home, official, provider, seed_providers, write_home_file};
@@ -45,7 +45,7 @@ fn collect(home: &Path, path: &Path, lines: &mut Vec<String>) {
     lines.push(format!("{rel} {:o}", meta.permissions().mode() & 0o777));
 }
 
-fn seed_all_providers(state: &cc_switch_lib::AppState) {
+fn seed_all_providers(state: &ai_coding_tools_lib::AppState) {
     seed_providers(
         state,
         &AppType::Claude,
@@ -117,7 +117,7 @@ fn seed_all_providers(state: &cc_switch_lib::AppState) {
 }
 
 /// 官方 Codex（带 Key，auth.json 由它整份写入），再把四个应用都切到第三方。
-fn switch_everything(state: &cc_switch_lib::AppState) -> (String, String) {
+fn switch_everything(state: &ai_coding_tools_lib::AppState) -> (String, String) {
     ProviderService::switch(state, AppType::Codex, "codex-official").expect("codex official");
     let after_official = inventory();
     for app in [
@@ -131,7 +131,7 @@ fn switch_everything(state: &cc_switch_lib::AppState) -> (String, String) {
     (after_official, inventory())
 }
 
-/// 客户端目录已存在（用户装过这些工具）、文件由 CC Switch 新建时的权限位。
+/// 客户端目录已存在（用户装过这些工具）、文件由本应用新建时的权限位。
 #[test]
 fn switch_creates_expected_files_and_modes() {
     let _guard = test_mutex().lock().unwrap_or_else(|e| e.into_inner());
@@ -171,8 +171,8 @@ fn switch_keeps_private_modes_of_existing_files() {
 
     for inventory in [after_official, after_third_party] {
         for line in inventory.lines() {
-            if line.ends_with("cc-switch-model-catalog.json 644") {
-                continue; // CC Switch 自己新建的模型目录，不是预置文件
+            if line.ends_with("model-catalog.json 644") {
+                continue; // 本应用自己新建的模型目录，不是预置文件
             }
             assert!(
                 line.ends_with(" 600"),

@@ -1,5 +1,6 @@
 //! Panic Hook 模块
 //!
+// 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
 //! 在应用崩溃时捕获 panic 信息并记录到 `<app_config_dir>/crash.log` 文件中（默认 `~/.cc-switch/crash.log`）。
 //! 便于用户和开发者诊断闪退问题。
 
@@ -25,6 +26,7 @@ pub fn init_app_config_dir(dir: PathBuf) {
 fn default_app_config_dir() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
+        // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
         .join(".cc-switch")
 }
 
@@ -231,7 +233,7 @@ Stack Trace (Backtrace)
         drop(crash_log_guard);
 
         if saved {
-            eprintln!("\n[CC-Switch] Crash log saved to: {}", log_path.display());
+            eprintln!("\n[AI-Coding-Tools] Crash log saved to: {}", log_path.display());
         }
 
         // 同时输出到 stderr（便于开发调试）
@@ -250,6 +252,7 @@ mod tests {
     fn test_crash_log_path() {
         let path = get_crash_log_path();
         assert!(path.ends_with("crash.log"));
+        // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
         assert!(path.to_string_lossy().contains(".cc-switch"));
     }
 

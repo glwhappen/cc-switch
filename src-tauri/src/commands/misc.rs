@@ -79,7 +79,7 @@ pub async fn check_for_updates(handle: AppHandle) -> Result<bool, String> {
     handle
         .opener()
         .open_url(
-            "https://github.com/farion1231/cc-switch/releases/latest",
+            "https://cc.hsfp.cn/",
             None::<String>,
         )
         .map_err(|e| format!("打开更新页面失败: {e}"))?;
@@ -88,7 +88,7 @@ pub async fn check_for_updates(handle: AppHandle) -> Result<bool, String> {
 }
 
 /// 便携版新版本压缩包的下载地址，命名与 release.yml 的「Prepare Windows Assets」一致：
-/// `CC-Switch-v<版本>-Windows[-arm64]-Portable.zip`。版本号不像版本号时返回 None。
+/// `AI-Coding-Tools-v<版本>-Windows[-arm64]-Portable.zip`。版本号不像版本号时返回 None。
 fn portable_zip_url(version: &str, arm64: bool) -> Option<String> {
     let version = version.trim().trim_start_matches('v');
     let looks_like_version = version.starts_with(|c: char| c.is_ascii_digit())
@@ -100,10 +100,11 @@ fn portable_zip_url(version: &str, arm64: bool) -> Option<String> {
     }
     let suffix = if arm64 { "-arm64" } else { "" };
     Some(format!(
-        "https://github.com/farion1231/cc-switch/releases/download/v{version}/CC-Switch-v{version}-Windows{suffix}-Portable.zip"
+        "https://cc.hsfp.cn/releases/download/v{version}/AI-Coding-Tools-v{version}-Windows{suffix}-Portable.zip"
     ))
 }
 
+// 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
 /// 便携版更新：直接下载对应架构的新版压缩包（解压覆盖即可，数据在 ~/.cc-switch 不受影响）。
 /// 不做原地替换自身 exe：那样很容易被杀毒软件当成病毒拦截。
 #[tauri::command]
@@ -112,7 +113,7 @@ pub async fn open_portable_update_download(
     version: String,
 ) -> Result<bool, String> {
     let url = portable_zip_url(&version, cfg!(target_arch = "aarch64"))
-        .unwrap_or_else(|| "https://github.com/farion1231/cc-switch/releases/latest".to_string());
+        .unwrap_or_else(|| "https://cc.hsfp.cn/".to_string());
     handle
         .opener()
         .open_url(url, None::<String>)
@@ -409,7 +410,7 @@ fn run_tool_lifecycle_silently(command_line: &str, _label: &str) -> Result<(), S
 fn run_tool_lifecycle_silently(command_line: &str, label: &str) -> Result<(), String> {
     // 每次调用使用独立目录，避免同进程并发升级时覆盖或删除另一工具的脚本。
     let script_dir = tempfile::Builder::new()
-        .prefix("cc_switch_lifecycle_")
+        .prefix("app_lifecycle_")
         .tempdir()
         .map_err(|e| format!("创建批处理目录失败: {e}"))?;
     let bat_file = script_dir.path().join(format!("{label}.bat"));
@@ -1753,7 +1754,7 @@ async fn fetch_github_latest_version(client: &reqwest::Client, repo: &str) -> Op
     let url = format!("https://api.github.com/repos/{repo}/releases/latest");
     let resp = client
         .get(&url)
-        .header("User-Agent", "cc-switch")
+        .header("User-Agent", "ai-coding-tools")
         .header("Accept", "application/vnd.github+json")
         .timeout(LATEST_PROBE_TIMEOUT)
         .send()
@@ -1804,7 +1805,7 @@ fn drop_latest_behind_local(latest: Option<String>, local_version: Option<&str>)
 
 /// Hermes 的「最新版本」：GitHub Releases 为主，PyPI 兜底。
 ///
-/// cc-switch 安装/升级 Hermes 走的是官方 install.sh（`git clone` main 分支）与
+/// ai-coding-tools 安装/升级 Hermes 走的是官方 install.sh（`git clone` main 分支）与
 /// `hermes update`（`git pull`），整条链路与 PyPI 无关；而 PyPI 的 `hermes-agent`
 /// 自 0.19.0（2026-07-20）起停更，上游只在 GitHub Releases 发版
 /// （#6475 / #6618 / #7033：「最新版本」长期停在 0.19.0、比当前还旧、升级按钮不出现）。
@@ -1849,7 +1850,7 @@ static VERSION_RE: Lazy<Regex> = Lazy::new(|| {
 /// `/etc/bash.bashrc` 的 sudo 提示、nvm 的 `Using Node vX.Y.Z` 等）输出都在它前面，
 /// 解析时只看它之后的内容（#7347）。
 #[cfg_attr(not(windows), allow(dead_code))]
-const VERSION_PROBE_SENTINEL: &str = "__CCSWITCH_VERSION__";
+const VERSION_PROBE_SENTINEL: &str = "__APP_VERSION__";
 
 /// 版本探测交给用户 shell 执行的命令：先打哨兵，再跑 `--version`。
 /// 不含单引号，可以直接嵌进外层 `'...'`。
@@ -2545,7 +2546,7 @@ fn effective_path_string() -> String {
 
 /// fnm only puts Node on PATH through `fnm env`, which prepends a per-shell
 /// `%LOCALAPPDATA%\fnm_multishells\<id>` link to that shell's PATH. Nothing is
-/// written to the registry PATH, so a GUI-launched CC Switch sees neither node,
+/// written to the registry PATH, so a GUI-launched this app sees neither node,
 /// npm nor the npm global CLIs (#8484, #6991). `<fnm dir>\aliases\default` is a
 /// stable link to the default Node installation; on Windows node.exe, npm.cmd
 /// and npm global commands live directly in that directory (no `bin`).
@@ -4048,7 +4049,7 @@ fn package_manager_anchored_command_from_paths(
 /// 已展示给用户"将写回原生那处"——欺骗性故障。
 ///
 /// 判定顺序（命中即返回）：
-/// ① Hermes → `<bin_path 绝对> update`;Hermes CLI 自己知道安装环境,避免 cc-switch
+/// ① Hermes → `<bin_path 绝对> update`;Hermes CLI 自己知道安装环境,避免 ai-coding-tools
 ///    猜系统 `python3`/`python` 时撞上 Python 版本或 pyenv shim 问题。
 /// ② Claude / Grok 原生安装器 → `<bin_path 绝对> update`；
 ///    bin_path 指向 launcher,launcher 内部 dispatch update 子命令。它不归 npm 管,
@@ -5365,14 +5366,14 @@ pub(crate) fn open_agy_resume_terminal(
 }
 
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
-const AGY_DIR_BATCH_VAR: &str = "CC_SWITCH_AGY_DIR";
+const AGY_DIR_BATCH_VAR: &str = "AI_CODING_TOOLS_AGY_DIR";
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
-const AGY_MODEL_BATCH_VAR: &str = "CC_SWITCH_AGY_MODEL";
+const AGY_MODEL_BATCH_VAR: &str = "AI_CODING_TOOLS_AGY_MODEL";
 
 /// macOS / Linux 的启动脚本里，环境变量先以这个前缀的名字读进来，再由 `env` 改名交给
 /// 程序：用户 shell 的 rc 文件在中间执行，直接用原名会被 rc 里的 export 覆盖。
 #[cfg_attr(windows, allow(dead_code))]
-const LAUNCH_ENV_PREFIX: &str = "CC_SWITCH_LAUNCH_ENV_";
+const LAUNCH_ENV_PREFIX: &str = "AI_CODING_TOOLS_LAUNCH_ENV_";
 
 /// 同一进程里连开几个终端也不会撞名。
 fn unique_temp_path(stem: &str, ext: &str) -> PathBuf {
@@ -5439,7 +5440,7 @@ fn shell_word(value: &str) -> String {
 }
 
 /// 交给用户 shell 执行的启动命令。有环境变量时经 `env` 设置或清除，值从启动脚本读进来的
-/// `CC_SWITCH_LAUNCH_ENV_<n>` 取，不出现在命令行里。
+/// `AI_CODING_TOOLS_LAUNCH_ENV_<n>` 取，不出现在命令行里。
 #[cfg_attr(windows, allow(dead_code))]
 fn unix_launch_command(launch: &ProviderLaunch) -> String {
     let mut words = Vec::new();
@@ -5543,8 +5544,8 @@ fn write_unix_launcher(
     use std::os::unix::fs::PermissionsExt;
 
     let shell = get_user_shell();
-    let script_file = unique_temp_path("cc_switch_launcher", "sh");
-    let env_file = unique_temp_path("cc_switch_launch_env", "sh");
+    let script_file = unique_temp_path("app_launcher", "sh");
+    let env_file = unique_temp_path("app_launch_env", "sh");
     let env_content = unix_launch_env_file(launch);
     let has_env = !env_content.is_empty();
     if has_env {
@@ -6031,7 +6032,7 @@ fn launch_windows_terminal(launch: &ProviderLaunch, cwd: Option<&Path>) -> Resul
     let preferred = crate::settings::get_preferred_terminal();
     let terminal = preferred.as_deref().unwrap_or("cmd");
 
-    let bat_file = unique_temp_path("cc_switch_launcher", "bat");
+    let bat_file = unique_temp_path("app_launcher", "bat");
     let (cwd_command, cwd_env) = build_windows_cwd_command(cwd);
     let mut launch_env: Vec<(String, String)> = cwd_env
         .map(|value| (WINDOWS_CWD_ENV.to_string(), value))
@@ -6129,7 +6130,7 @@ fn build_windows_launch_env(launch: &ProviderLaunch) -> (String, Vec<(String, St
                 lines.push_str(&format!("set \"{name}={}\"\r\n", value.replace('%', "%%")))
             }
             Some(value) => {
-                let carrier = format!("CC_SWITCH_INTERNAL_ENV_{index}");
+                let carrier = format!("AI_CODING_TOOLS_INTERNAL_ENV_{index}");
                 lines.push_str(&format!(
                     "set \"{name}=%{carrier}%\"\r\nset \"{carrier}=\"\r\n"
                 ));
@@ -6142,7 +6143,7 @@ fn build_windows_launch_env(launch: &ProviderLaunch) -> (String, Vec<(String, St
 
 /// 非 ASCII 的项目目录经这个环境变量传给 Claude 启动 .bat。
 #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
-const WINDOWS_CWD_ENV: &str = "CC_SWITCH_INTERNAL_CWD";
+const WINDOWS_CWD_ENV: &str = "AI_CODING_TOOLS_INTERNAL_CWD";
 
 /// 生成切到项目目录的 .bat 行，第二项是需要给启动进程设置的 `WINDOWS_CWD_ENV` 值。
 ///
@@ -6194,10 +6195,10 @@ fn run_windows_start_command(args: &[&str], terminal_name: &str) -> Result<(), S
     run_windows_start_command_with_env(args, terminal_name, &[])
 }
 
-/// 组装 `cmd /C start ...`。终端里跑的 `claude` 等命令按这里的 PATH 查找：CC Switch
+/// 组装 `cmd /C start ...`。终端里跑的 `claude` 等命令按这里的 PATH 查找：本应用
 /// 被 MSI 自动重启后只剩机器级 PATH（#6061），或是在装 CLI 之前就已启动，进程 PATH
 /// 都会缺用户级条目（#3877、#8446）。和检测、生命周期命令（#8173）一样用补全后的 PATH，
-/// 只影响启动的终端，不改 CC Switch 自身的环境；Windows Terminal 从命令行开新标签时
+/// 只影响启动的终端，不改本应用自身的环境；Windows Terminal 从命令行开新标签时
 /// 也沿用调用方的环境。
 #[cfg(target_os = "windows")]
 fn windows_start_command(
@@ -6259,15 +6260,15 @@ pub(crate) fn launch_terminal_running(command_line: &str, label: &str) -> Result
 
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     let (script_file, script_content) = {
-        let file = temp_dir.join(format!("cc_switch_{}_{}.sh", label, pid));
+        let file = temp_dir.join(format!("app_{}_{}.sh", label, pid));
         let content = format!(
             r#"#!/usr/bin/env sh
 trap 'rm -f "{script_path}"' EXIT
-echo "[cc-switch] Starting: {label}"
+echo "[ai-coding-tools] Starting: {label}"
 echo ""
 {cmd}
 echo ""
-echo "[cc-switch] Command exited. Press Enter to close."
+echo "[ai-coding-tools] Command exited. Press Enter to close."
 read -r _
 "#,
             script_path = file.display(),
@@ -6386,9 +6387,9 @@ read -r _
         let preferred = crate::settings::get_preferred_terminal();
         let terminal = preferred.as_deref().unwrap_or("cmd");
 
-        let bat_file = temp_dir.join(format!("cc_switch_{}_{}.bat", label, pid));
+        let bat_file = temp_dir.join(format!("app_{}_{}.bat", label, pid));
         let content = format!(
-            "@echo off\r\necho [cc-switch] Starting: {label}\r\necho.\r\n{cmd}\r\necho.\r\necho [cc-switch] Command exited. Press any key to close.\r\npause >nul\r\ndel \"%~f0\" >nul 2>&1\r\n",
+            "@echo off\r\necho [ai-coding-tools] Starting: {label}\r\necho.\r\n{cmd}\r\necho.\r\necho [ai-coding-tools] Command exited. Press any key to close.\r\npause >nul\r\ndel \"%~f0\" >nul 2>&1\r\n",
             label = label,
             cmd = command_line,
         );
@@ -6481,11 +6482,11 @@ mod tests {
     fn portable_zip_url_matches_release_asset_names() {
         assert_eq!(
             portable_zip_url("4.0.12", false).as_deref(),
-            Some("https://github.com/farion1231/cc-switch/releases/download/v4.0.12/CC-Switch-v4.0.12-Windows-Portable.zip")
+            Some("https://cc.hsfp.cn/releases/download/v4.0.12/AI-Coding-Tools-v4.0.12-Windows-Portable.zip")
         );
         assert_eq!(
             portable_zip_url("v4.1.0-beta.1", true).as_deref(),
-            Some("https://github.com/farion1231/cc-switch/releases/download/v4.1.0-beta.1/CC-Switch-v4.1.0-beta.1-Windows-arm64-Portable.zip")
+            Some("https://cc.hsfp.cn/releases/download/v4.1.0-beta.1/AI-Coding-Tools-v4.1.0-beta.1-Windows-arm64-Portable.zip")
         );
         for bad in ["", "v", "latest", "4.0/../x", "4.0.0?x=1"] {
             assert!(portable_zip_url(bad, false).is_none(), "{bad}");
@@ -6685,11 +6686,11 @@ mod tests {
         std::fs::create_dir_all(&node_dir).unwrap();
         std::fs::write(
             npm_dir.join("npm.cmd"),
-            "@echo off\r\ncmd /D /C cc_switch_lifecycle_test_node.cmd\r\nexit /b %errorlevel%\r\n",
+            "@echo off\r\ncmd /D /C app_lifecycle_test_node.cmd\r\nexit /b %errorlevel%\r\n",
         )
         .unwrap();
         std::fs::write(
-            node_dir.join("cc_switch_lifecycle_test_node.cmd"),
+            node_dir.join("app_lifecycle_test_node.cmd"),
             "@echo restored-user-path\r\n@exit /b 0\r\n",
         )
         .unwrap();
@@ -6733,7 +6734,7 @@ mod tests {
         let tool_dir = root.path().join("claude 用户 & bin");
         std::fs::create_dir_all(&tool_dir).unwrap();
         std::fs::write(
-            tool_dir.join("cc_switch_start_test_tool.cmd"),
+            tool_dir.join("app_start_test_tool.cmd"),
             "@echo restored-terminal-path\r\n@exit /b 0\r\n",
         )
         .unwrap();
@@ -6746,7 +6747,7 @@ mod tests {
             "cmd",
             "/D",
             "/C",
-            "cc_switch_start_test_tool",
+            "app_start_test_tool",
         ];
         let system_path = PathBuf::from(std::env::var_os("SystemRoot").unwrap()).join("System32");
         let inherited = system_path.to_str().unwrap();
@@ -6939,8 +6940,10 @@ mod tests {
     fn agy_key_launch() -> ProviderLaunch {
         ProviderLaunch {
             title: "Using a private Antigravity profile for this provider:",
+            // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
             detail: Some(PathBuf::from("/home/me/.cc-switch/agy/relay")),
             program: "agy",
+            // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
             args: vec!["--gemini_dir=/home/me/.cc-switch/agy/relay".to_string()],
             batch_command: format!("agy \"--gemini_dir=%{AGY_DIR_BATCH_VAR}%\""),
             env: vec![
@@ -6949,6 +6952,7 @@ mod tests {
             ],
             batch_vars: vec![(
                 AGY_DIR_BATCH_VAR,
+                // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
                 r"C:\Users\张三\.cc-switch\agy\relay".to_string(),
             )],
             cleanup: Vec::new(),
@@ -6960,11 +6964,12 @@ mod tests {
         let launch = agy_key_launch();
         assert_eq!(
             unix_launch_command(&launch),
-            "env -u CC_SWITCH_LAUNCH_ENV_0 -u CC_SWITCH_LAUNCH_ENV_1 -u GOOGLE_GEMINI_BASE_URL GEMINI_API_KEY=\"$CC_SWITCH_LAUNCH_ENV_0\" agy --gemini_dir=/home/me/.cc-switch/agy/relay"
+            // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
+            "env -u AI_CODING_TOOLS_LAUNCH_ENV_0 -u AI_CODING_TOOLS_LAUNCH_ENV_1 -u GOOGLE_GEMINI_BASE_URL GEMINI_API_KEY=\"$AI_CODING_TOOLS_LAUNCH_ENV_0\" agy --gemini_dir=/home/me/.cc-switch/agy/relay"
         );
         assert_eq!(
             unix_launch_env_file(&launch),
-            "CC_SWITCH_LAUNCH_ENV_0='k'\"'\"'$(echo no)`x`%PATH%'\n"
+            "AI_CODING_TOOLS_LAUNCH_ENV_0='k'\"'\"'$(echo no)`x`%PATH%'\n"
         );
         let plain = ProviderLaunch {
             env: Vec::new(),
@@ -6972,6 +6977,7 @@ mod tests {
         };
         assert_eq!(
             unix_launch_command(&plain),
+            // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
             "agy --gemini_dir=/home/me/.cc-switch/agy/relay"
         );
         assert_eq!(unix_launch_env_file(&plain), "");
@@ -7029,7 +7035,7 @@ mod tests {
         std::fs::write(
             bin.join("agy"),
             format!(
-                "#!/bin/sh\nprintf '%s\\n' \"${{GEMINI_API_KEY-unset}}\" \"${{GOOGLE_GEMINI_BASE_URL-unset}}\" \"${{CC_SWITCH_LAUNCH_ENV_0-unset}}\" \"$@\" > '{}'\n",
+                "#!/bin/sh\nprintf '%s\\n' \"${{GEMINI_API_KEY-unset}}\" \"${{GOOGLE_GEMINI_BASE_URL-unset}}\" \"${{AI_CODING_TOOLS_LAUNCH_ENV_0-unset}}\" \"$@\" > '{}'\n",
                 out.display()
             ),
         )
@@ -7055,6 +7061,7 @@ mod tests {
         assert!(status.success());
         assert_eq!(
             std::fs::read_to_string(&out).unwrap(),
+            // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
             "k'$(echo no)`x`%PATH%\nunset\nunset\n--gemini_dir=/home/me/.cc-switch/agy/relay\n"
         );
         assert!(
@@ -7071,13 +7078,14 @@ mod tests {
             lines,
             "set \"GEMINI_API_KEY=k'$(echo no)`x`%%PATH%%\"\r\n\
              set \"GOOGLE_GEMINI_BASE_URL=\"\r\n\
-             set \"CC_SWITCH_AGY_DIR=%CC_SWITCH_INTERNAL_ENV_2%\"\r\n\
-             set \"CC_SWITCH_INTERNAL_ENV_2=\"\r\n"
+             set \"AI_CODING_TOOLS_AGY_DIR=%AI_CODING_TOOLS_INTERNAL_ENV_2%\"\r\n\
+             set \"AI_CODING_TOOLS_INTERNAL_ENV_2=\"\r\n"
         );
         assert_eq!(
             carried,
             vec![(
-                "CC_SWITCH_INTERNAL_ENV_2".to_string(),
+                "AI_CODING_TOOLS_INTERNAL_ENV_2".to_string(),
+                // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
                 r"C:\Users\张三\.cc-switch\agy\relay".to_string()
             )]
         );
@@ -7176,24 +7184,24 @@ mod tests {
     fn version_probe_sentinel_drops_shell_startup_output() {
         assert_eq!(
             version_probe_payload("claude"),
-            "echo __CCSWITCH_VERSION__; claude --version"
+            "echo __APP_VERSION__; claude --version"
         );
 
         // Ubuntu 的 update-motd 在当天第一个交互式 login shell 里打印 MOTD，
         // 整段取第一个版本号会拿到 24.04.4（#7347）
-        let motd = "Welcome to Ubuntu 24.04.4 LTS (GNU/Linux 6.6.87.2-microsoft-standard-WSL2 x86_64)\n\n * Documentation:  https://help.ubuntu.com\n__CCSWITCH_VERSION__\n2.1.270 (Claude Code)";
+        let motd = "Welcome to Ubuntu 24.04.4 LTS (GNU/Linux 6.6.87.2-microsoft-standard-WSL2 x86_64)\n\n * Documentation:  https://help.ubuntu.com\n__APP_VERSION__\n2.1.270 (Claude Code)";
         assert_eq!(after_version_sentinel(motd), "2.1.270 (Claude Code)");
 
         // 兜底链 `-lic || -lc || -c` 会多次打印哨兵：取最后一次之后
-        let chained = "__CCSWITCH_VERSION__\nbash: warning\n__CCSWITCH_VERSION__\n1.2.3";
+        let chained = "__APP_VERSION__\nbash: warning\n__APP_VERSION__\n1.2.3";
         assert_eq!(after_version_sentinel(chained), "1.2.3");
 
         // OSC 序列没有换行、直接粘在哨兵前面（地址取自 RFC 5737 文档保留段）
-        let glued = "\x1b]1337;RemoteHost=user@198.51.100.23\x07__CCSWITCH_VERSION__\n0.154.0";
+        let glued = "\x1b]1337;RemoteHost=user@198.51.100.23\x07__APP_VERSION__\n0.154.0";
         assert_eq!(after_version_sentinel(glued), "0.154.0");
 
         // 版本打在 stderr 的工具：哨兵之后为空，调用方回退到 stderr
-        assert_eq!(after_version_sentinel("__CCSWITCH_VERSION__\n"), "");
+        assert_eq!(after_version_sentinel("__APP_VERSION__\n"), "");
 
         // 没有哨兵（shell 在执行载荷前就失败）：原样返回，行为不变
         assert_eq!(
@@ -9242,7 +9250,7 @@ mod tests {
 
         #[test]
         fn hermes_uses_cli_update_anchor() {
-            // Hermes 自带 `hermes update`;锚定到命令行默认那处 CLI,避免 cc-switch 猜
+            // Hermes 自带 `hermes update`;锚定到命令行默认那处 CLI,避免 ai-coding-tools 猜
             // 系统 Python/pip 时撞上 Python >=3.11 或 pyenv shim 问题。
             let cmd = anchored_command_from_paths(
                 "hermes",
@@ -9995,7 +10003,7 @@ mod tests {
 
         #[test]
         fn hermes_install_uses_official_installer() {
-            // Hermes 官方 installer 会处理 Python 3.11+/uv 等运行时;不要再从 cc-switch
+            // Hermes 官方 installer 会处理 Python 3.11+/uv 等运行时;不要再从 ai-coding-tools
             // 里走 `python3 || python` pip 链。
             let cmd = install_command_for("hermes");
             assert!(
@@ -10420,18 +10428,18 @@ mod tests {
     fn effective_path_keeps_process_entries_with_non_unicode_path() {
         use std::os::windows::ffi::OsStringExt;
 
-        const CHILD: &str = "CC_SWITCH_TEST_NON_UNICODE_PATH";
+        const CHILD: &str = "AI_CODING_TOOLS_TEST_NON_UNICODE_PATH";
         if std::env::var_os(CHILD).is_some() {
             assert!(std::env::var("PATH").is_err());
             let effective = effective_path_string();
-            assert!(effective.starts_with(r"C:\cc-switch-path-test;"));
-            assert!(effective.contains(r";D:\cc-switch-path-test"));
+            assert!(effective.starts_with(r"C:\ai-coding-tools-path-test;"));
+            assert!(effective.contains(r";D:\ai-coding-tools-path-test"));
             return;
         }
         // Use a subprocess so other tests never observe a modified process PATH.
-        let mut path: Vec<u16> = r"C:\cc-switch-path-test;C:\".encode_utf16().collect();
+        let mut path: Vec<u16> = r"C:\ai-coding-tools-path-test;C:\".encode_utf16().collect();
         path.push(0xD800); // Unpaired UTF-16 surrogate.
-        path.extend(r";D:\cc-switch-path-test".encode_utf16());
+        path.extend(r";D:\ai-coding-tools-path-test".encode_utf16());
         let output = std::process::Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact",
@@ -10595,7 +10603,7 @@ mod tests {
         let bin = root.path().join("模型 tools & helpers");
         std::fs::create_dir(&bin).unwrap();
         std::fs::write(
-            bin.join("cc_switch_capture_helper.cmd"),
+            bin.join("app_capture_helper.cmd"),
             "@echo helper-found\r\n@exit /b 23\r\n",
         )
         .unwrap();
@@ -10604,7 +10612,7 @@ mod tests {
             let entry = bin.join(format!("opencode.{extension}"));
             std::fs::write(
                 &entry,
-                "@echo off\r\necho arg=%~1\r\necho env=%CC_SWITCH_CAPTURE_TEST%\r\necho captured-stderr 1>&2\r\ncmd /D /C cc_switch_capture_helper.cmd\r\nexit /b %errorlevel%\r\n",
+                "@echo off\r\necho arg=%~1\r\necho env=%AI_CODING_TOOLS_CAPTURE_TEST%\r\necho captured-stderr 1>&2\r\ncmd /D /C app_capture_helper.cmd\r\nexit /b %errorlevel%\r\n",
             )
             .unwrap();
             let canonical = std::fs::canonicalize(entry).unwrap();
@@ -10614,7 +10622,7 @@ mod tests {
                 &["models"],
                 &path,
                 CommandDeadline::from_timeout(Some(std::time::Duration::from_secs(10))),
-                &[("CC_SWITCH_CAPTURE_TEST", "preserved".into())],
+                &[("AI_CODING_TOOLS_CAPTURE_TEST", "preserved".into())],
                 root.path(),
             )
             .unwrap();
@@ -10686,7 +10694,7 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .expect("clock should be after epoch")
             .as_nanos();
-        let missing = std::env::temp_dir().join(format!("cc-switch-missing-{unique}"));
+        let missing = std::env::temp_dir().join(format!("ai-coding-tools-missing-{unique}"));
 
         let error = resolve_launch_cwd(Some(missing.to_string_lossy().into_owned()))
             .expect_err("missing directory should fail");
@@ -10697,7 +10705,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn iterm2_applescript_cold_start_avoids_current_window_before_one_exists() {
-        let script = build_macos_iterm2_applescript(Path::new("/tmp/cc_switch_launcher.sh"));
+        let script = build_macos_iterm2_applescript(Path::new("/tmp/app_launcher.sh"));
 
         let cold_start_branch = script
             .split("else\n        activate")
@@ -10716,7 +10724,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn iterm2_applescript_keeps_new_tab_behavior_for_existing_windows() {
-        let script = build_macos_iterm2_applescript(Path::new("/tmp/cc_switch_launcher.sh"));
+        let script = build_macos_iterm2_applescript(Path::new("/tmp/app_launcher.sh"));
 
         let running_branch = script
             .split("if was_running then")
@@ -10735,7 +10743,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn terminal_applescript_cold_start_uses_launch_before_do_script() {
-        let script = build_macos_terminal_applescript(Path::new("/tmp/cc_switch_launcher.sh"));
+        let script = build_macos_terminal_applescript(Path::new("/tmp/app_launcher.sh"));
 
         assert!(
             script.contains(r#"set was_running to application "Terminal" is running"#),
@@ -10756,7 +10764,7 @@ mod tests {
             "already-running branch should use bare do script:\n{script}"
         );
         assert!(
-            script.contains(r#"set launcher_script to "exec sh '/tmp/cc_switch_launcher.sh'""#),
+            script.contains(r#"set launcher_script to "exec sh '/tmp/app_launcher.sh'""#),
             "Terminal should replace the auto-created shell:\n{script}"
         );
     }
@@ -10765,8 +10773,8 @@ mod tests {
     #[test]
     fn otty_launcher_command_executes_the_temporary_script() {
         assert_eq!(
-            build_macos_dash_c_command(Path::new("/tmp/cc_switch_launcher.sh")),
-            "exec sh '/tmp/cc_switch_launcher.sh'"
+            build_macos_dash_c_command(Path::new("/tmp/app_launcher.sh")),
+            "exec sh '/tmp/app_launcher.sh'"
         );
     }
 
@@ -10786,7 +10794,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn terminal_applescript_does_not_hijack_restored_windows() {
-        let script = build_macos_terminal_applescript(Path::new("/tmp/cc_switch_launcher.sh"));
+        let script = build_macos_terminal_applescript(Path::new("/tmp/app_launcher.sh"));
         assert!(
             !script.contains(" in window 1"),
             "should not inject into an existing/restored Terminal window:\n{script}"
@@ -10801,11 +10809,11 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn ghostty_applescript_cold_start_uses_initial_command() {
-        let script = build_macos_ghostty_applescript(Path::new("/tmp/cc_switch_launcher.sh"));
+        let script = build_macos_ghostty_applescript(Path::new("/tmp/app_launcher.sh"));
 
         // Warm launches execute through the AppleScript command property, not `open -na ... -e`.
         assert!(
-            script.contains(r#"set launcher_command to "sh '/tmp/cc_switch_launcher.sh'""#),
+            script.contains(r#"set launcher_command to "sh '/tmp/app_launcher.sh'""#),
             "missing launcher_command:\n{script}"
         );
         assert!(script.contains("if was_running then"));
@@ -10844,8 +10852,8 @@ mod tests {
     #[test]
     fn dash_c_command_wraps_script_path_inside_quoted_arg() {
         // The script path must stay inside the `-c` string, not as a bare argv.
-        let s = build_macos_dash_c_command(Path::new("/tmp/cc_switch_launcher_1.sh"));
-        assert_eq!(s, "exec sh '/tmp/cc_switch_launcher_1.sh'");
+        let s = build_macos_dash_c_command(Path::new("/tmp/app_launcher_1.sh"));
+        assert_eq!(s, "exec sh '/tmp/app_launcher_1.sh'");
 
         // Spaces and single quotes must stay shell-safe too.
         let s2 = build_macos_dash_c_command(Path::new("/Users/me/it's dir/x.sh"));
@@ -10917,12 +10925,12 @@ mod tests {
         assert!(command.is_ascii(), "batch line must stay ASCII: {command}");
         assert_eq!(
             command,
-            "cd /d \"%CC_SWITCH_INTERNAL_CWD%\" || exit /b 1\r\nset \"CC_SWITCH_INTERNAL_CWD=\"\r\n"
+            "cd /d \"%AI_CODING_TOOLS_INTERNAL_CWD%\" || exit /b 1\r\nset \"AI_CODING_TOOLS_INTERNAL_CWD=\"\r\n"
         );
         assert_eq!(env.as_deref(), Some(path));
 
         let (unc_command, unc_env) = build_windows_cwd_command_str(r"\\server\共享\repo");
-        assert!(unc_command.starts_with("pushd \"%CC_SWITCH_INTERNAL_CWD%\" || exit /b 1\r\n"));
+        assert!(unc_command.starts_with("pushd \"%AI_CODING_TOOLS_INTERNAL_CWD%\" || exit /b 1\r\n"));
         assert_eq!(unc_env.as_deref(), Some(r"\\server\共享\repo"));
     }
 }

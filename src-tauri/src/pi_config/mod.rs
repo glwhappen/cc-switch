@@ -1,7 +1,7 @@
 //! Thin adapter for Pi's native files.
 //!
 //! Pi owns account login and the active provider/model in `settings.json`.
-//! CC Switch only manages explicit provider entries in `models.json`.
+//! This app only manages explicit provider entries in `models.json`.
 
 use crate::config::{atomic_write_private, get_home_dir};
 use crate::error::AppError;
@@ -157,7 +157,7 @@ pub(crate) fn replace_pi_provider(
     })?;
     if current != expected {
         return Err(AppError::Conflict(format!(
-            "Pi provider '{provider_key}' changed outside CC Switch"
+            "Pi provider '{provider_key}' changed outside this app"
         )));
     }
     if current == replacement {
@@ -211,7 +211,7 @@ fn remove_pi_provider_inner(
     };
     if expected.is_some_and(|expected| current != *expected) {
         return Err(AppError::Conflict(format!(
-            "Pi provider '{provider_key}' changed outside CC Switch"
+            "Pi provider '{provider_key}' changed outside this app"
         )));
     }
     providers.remove(provider_key);
@@ -239,7 +239,7 @@ pub(crate) fn restore_pi_provider_if_missing(
     }
 }
 
-/// Validate the shape CC Switch can persist as one
+/// Validate the shape this app can persist as one
 /// `models.json.providers.<provider_key>` node.
 ///
 /// Provider ownership is intentionally source-based: every explicit object in
@@ -276,7 +276,7 @@ pub(crate) fn provider_base_url(config: &Value) -> Result<String, AppError> {
         .ok_or_else(|| AppError::InvalidInput("Pi provider has no request URL".to_string()))
 }
 
-/// The key CC Switch's own usage queries should send for a Pi `apiKey` value.
+/// The key this app's own usage queries should send for a Pi `apiKey` value.
 ///
 /// Pi resolves `$NAME` / `${NAME}` from the environment (`$$` and `$!` are literal
 /// `$` and `!`) and runs values starting with `!` as shell commands. Usage queries
@@ -484,7 +484,7 @@ fn ensure_models_revision(path: &Path, expected_revision: &str) -> Result<(), Ap
         Ok(())
     } else {
         Err(AppError::Conflict(format!(
-            "Pi models.json changed outside CC Switch: {}",
+            "Pi models.json changed outside this app: {}",
             path.display()
         )))
     }
@@ -625,14 +625,14 @@ mod tests {
         let mut value = provider();
         value["sdkOption"] = json!({"timeout": 30});
         value["models"][0]["compat"] = json!({"supportsDeveloperRole": true});
-        validate_provider_node("cc-switch-example", &value).expect("valid provider");
+        validate_provider_node("ai-coding-tools-example", &value).expect("valid provider");
     }
 
     #[test]
     fn provider_node_ownership_depends_on_models_json_membership() {
         let mut oauth = provider();
         oauth["oauth"] = json!("anthropic");
-        validate_provider_node("cc-switch-example", &oauth)
+        validate_provider_node("ai-coding-tools-example", &oauth)
             .expect("an explicit models.json node stays manageable");
         validate_provider_node("anthropic", &json!({}))
             .expect("a built-in provider key may be explicitly configured");
@@ -688,7 +688,7 @@ mod tests {
         use std::os::unix::fs::PermissionsExt;
 
         let _agent = test_support::TestAgentDir::new();
-        insert_pi_provider("cc-switch-private", &provider()).expect("write private models file");
+        insert_pi_provider("ai-coding-tools-private", &provider()).expect("write private models file");
 
         let path = get_pi_models_path().expect("models path");
         let file_mode = fs::metadata(&path)
@@ -720,7 +720,7 @@ mod tests {
         let external = r#"{"providers":{"external":{"models":[]},"pi-added":{"models":[]}}}"#;
         fs::write(&path, external).expect("edit models externally");
 
-        let replacement = json!({"providers": {"cc-switch": provider()}});
+        let replacement = json!({"providers": {"ai-coding-tools": provider()}});
         let error = write_models_document(&path, &replacement, &stale_revision)
             .expect_err("stale write must fail");
         assert!(matches!(error, AppError::Conflict(_)));

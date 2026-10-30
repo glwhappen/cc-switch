@@ -1,15 +1,15 @@
 //! 直接向 Google 查某个 Antigravity 账号的剩余额度（授权中心逐个账号显示）。
 //!
-//! 和 agy 的 `/usage` 是同一个接口、同一组额度桶，区别是用 CC Switch 存的那份令牌查，
+//! 和 agy 的 `/usage` 是同一个接口、同一组额度桶，区别是用本应用存的那份令牌查，
 //! 不用先把 agy 切到这个号。服务端按 User-Agent 决定回什么：不带 `antigravity` 一律
 //! 403「没有有效许可」；带了但不是 `antigravity/cli/<版本>`（或版本低于 1.2.0）时只回
 //! Claude 和 GPT 那组，Gemini 那组整个省掉。所以 UA 写成
-//! `cc-switch/<版本> (antigravity/cli/<本机 agy 版本>)`：照实报 CC Switch，括号里补上
+//! `ai-coding-tools/<版本> (antigravity/cli/<本机 agy 版本>)`：照实报本应用，括号里补上
 //! 服务端要的客户端标识，版本取本机装的 agy，读不到时用 `FALLBACK_AGY_VERSION`。
 //! 只查额度，不调模型、不做预热，也不据额度自动换号。
 //!
 //! 没有使用资格的号（如 Google 判定未满 18 岁）同样回 403「没有有效许可」，这时再问一次
-//! `loadCodeAssist`，把 Google 给的不合格原因原样显示，免得看着像 CC Switch 的问题。
+//! `loadCodeAssist`，把 Google 给的不合格原因原样显示，免得看着像本应用的问题。
 
 use std::time::Duration;
 
@@ -96,7 +96,7 @@ struct ErrorDetail {
 
 fn user_agent(agy_version: &str) -> String {
     format!(
-        "cc-switch/{} (antigravity/cli/{agy_version})",
+        "ai-coding-tools/{} (antigravity/cli/{agy_version})",
         env!("CARGO_PKG_VERSION")
     )
 }
@@ -310,10 +310,10 @@ mod tests {
     }
 
     #[test]
-    fn user_agent_names_cc_switch_and_the_agy_cli_version() {
+    fn user_agent_names_app_and_the_agy_cli_version() {
         // 服务端只在看到 `antigravity/cli/<版本>` 时才回 Gemini 那组，写成 `(antigravity)` 会漏
         let ua = user_agent("1.4.6");
-        assert!(ua.starts_with("cc-switch/"));
+        assert!(ua.starts_with("ai-coding-tools/"));
         assert!(ua.ends_with(" (antigravity/cli/1.4.6)"));
         assert!(user_agent(FALLBACK_AGY_VERSION).contains("antigravity/cli/"));
     }

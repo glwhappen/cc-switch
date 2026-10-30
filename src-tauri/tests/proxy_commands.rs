@@ -1,4 +1,4 @@
-use cc_switch_lib::{
+use ai_coding_tools_lib::{
     get_pricing_model_source_test_hook, set_pricing_model_source_test_hook, AppError,
 };
 

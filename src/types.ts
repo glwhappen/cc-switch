@@ -22,7 +22,7 @@ export interface Provider {
   notes?: string;
   // 新增：是否为商业合作伙伴
   isPartner?: boolean;
-  // 可选：供应商元数据（仅存于 ~/.cc-switch/config.json，不写入 live 配置）
+  // 可选：供应商元数据（仅存于数据目录的 config.json，不写入 live 配置）
   meta?: ProviderMeta;
   // 图标配置
   icon?: string; // 图标名称（如 "openai", "anthropic"）
@@ -255,7 +255,9 @@ export interface ClaudeStackModel {
 // Skill 同步方式
 export type SkillSyncMethod = "auto" | "symlink" | "copy";
 
-// Skill 存储位置
+// Skill 存储位置。
+// 取值 cc_switch 是 Rust 侧 SkillStorageLocation 的序列化值，改名属于破坏性配置变更
+// （既有 settings.json 里存的是 cc_switch），故保留。
 export type SkillStorageLocation = "cc_switch" | "unified";
 
 // Claude API 格式类型
@@ -387,7 +389,7 @@ export interface UsageDisplaySettings {
 }
 
 // 应用设置类型（用于设置对话框与 Tauri API）
-// 存储在本地 ~/.cc-switch/settings.json，不随数据库同步
+// 存储在本地数据目录的 settings.json，不随数据库同步
 export interface Settings {
   // ===== 设备级 UI 设置 =====
   // 是否在系统托盘（macOS 菜单栏）显示图标
@@ -499,7 +501,7 @@ export interface Settings {
   // ===== Skill 同步设置 =====
   // Skill 同步方式：auto（默认，优先 symlink）、symlink、copy
   skillSyncMethod?: SkillSyncMethod;
-  // Skill 存储位置：cc_switch（默认）或 unified（~/.agents/skills/）
+  // Skill 存储位置：cc_switch（默认，后端序列化值）或 unified（~/.agents/skills/）
   skillStorageLocation?: SkillStorageLocation;
 
   // ===== WebDAV v2 同步设置 =====

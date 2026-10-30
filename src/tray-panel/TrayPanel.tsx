@@ -43,7 +43,7 @@ import { usePanelTheme } from "./usePanelTheme";
 import { UsageTab } from "./UsageTab";
 
 type Tab = "config" | "usage";
-const TAB_KEY = "cc-switch-tray-tab";
+const TAB_KEY = "ai-coding-tools-tray-tab";
 /** 主界面保存语言用的键 */
 const LANGUAGE_KEY = "language";
 const MAIN_MAX_HEIGHT = 620;
@@ -990,7 +990,7 @@ export function TrayPanel() {
           data-other-item
           className="flex shrink-0 items-center px-4 pb-2 pt-3"
         >
-          <span className="text-[15px] font-semibold">CC Switch</span>
+          <span className="text-[15px] font-semibold">AI Coding Tools</span>
           <button
             type="button"
             title={texts.settings}

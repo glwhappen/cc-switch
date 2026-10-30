@@ -75,6 +75,7 @@ import { useSkillInstallTargets } from "./useSkillInstallTargets";
 import { describeRepoFailures } from "./repoFailures";
 import type { ZipSkippedSkill } from "@/lib/api/skills";
 
+// 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局
 const BACKUP_DIR = "~/.cc-switch/skill-backups";
 
 type SkillsView = "installed" | "discover";

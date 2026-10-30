@@ -240,6 +240,7 @@ export const handlers = [
 
   // Skills / 用量：新加的只读或重投影命令，测试里默认都成功
   http.post(`${TAURI_ENDPOINT}/resync_skills_to_apps`, () => success([])),
+  // 命令名沿用上游 Rust 侧的 get_cc_switch_skills_dir，重命名需同步改 src-tauri
   http.post(`${TAURI_ENDPOINT}/get_cc_switch_skills_dir`, () =>
     success("/home/test/.cc-switch/skills"),
   ),

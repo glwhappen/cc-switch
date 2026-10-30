@@ -1,4 +1,4 @@
-use cc_switch_lib::{AppType, Prompt, PromptService, Provider, ProviderService};
+use ai_coding_tools_lib::{AppType, Prompt, PromptService, Provider, ProviderService};
 use serde_json::json;
 use std::fs;
 

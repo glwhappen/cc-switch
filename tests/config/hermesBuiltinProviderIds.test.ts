@@ -19,7 +19,7 @@ describe("Hermes built-in provider ids", () => {
 
   // Aliases resolve to a different canonical id, so Hermes still picks the
   // same-named custom provider.
-  it.each(["kimi", "glm", "zhipu", "moonshot", "cc-switch-minimax", "custom"])(
+  it.each(["kimi", "glm", "zhipu", "moonshot", "ai-coding-tools-minimax", "custom"])(
     "does not flag %s",
     (key) => {
       expect(isHermesBuiltinProviderId(key)).toBe(false);

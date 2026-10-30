@@ -96,9 +96,10 @@ fn register_db_change_hook(conn: &Connection) {
 impl Database {
     /// 初始化数据库连接并创建表
     ///
-    /// 数据库文件位于 `~/.cc-switch/cc-switch.db`
+    // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
+    /// 数据库文件位于 `~/.cc-switch/ai-coding-tools.db`
     pub fn init() -> Result<Self, AppError> {
-        let db_path = get_app_config_dir().join("cc-switch.db");
+        let db_path = get_app_config_dir().join("ai-coding-tools.db");
         let db_exists = db_path.exists();
 
         // 确保父目录存在

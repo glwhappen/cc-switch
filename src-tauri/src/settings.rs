@@ -121,7 +121,7 @@ pub struct WebDavSyncStatus {
 }
 
 fn default_remote_root() -> String {
-    "cc-switch-sync".to_string()
+    "ai-coding-tools-sync".to_string()
 }
 fn default_profile() -> String {
     "default".to_string()
@@ -317,7 +317,7 @@ pub struct LocalMigrations {
     /// 这样重新开启能把"关闭期间"落入 openai 桶的官方会话补迁进来。
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub codex_official_history_unify_v1: Option<CodexOfficialHistoryUnifyMigration>,
-    /// 旧版官方路由桶（`cc-switch-official`）迁回 openai 桶的标记，按 Codex 目录生效。
+    /// 旧版官方路由桶（`official`）迁回 openai 桶的标记，按 Codex 目录生效。
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub codex_legacy_official_history_bucket_v1: Option<CodexLegacyOfficialHistoryBucketMigration>,
 }
@@ -400,6 +400,7 @@ pub struct UsageDisplaySettings {
 
 /// 应用设置结构
 ///
+// 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
 /// 存储设备级别设置，保存在本地 `~/.cc-switch/settings.json`，不随数据库同步。
 /// 这确保了云同步场景下多设备可以独立运作。
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -588,7 +589,7 @@ pub struct AppSettings {
     /// Skill 同步方式：auto（默认，优先 symlink）、symlink、copy
     #[serde(default)]
     pub skill_sync_method: SyncMethod,
-    /// Skill 存储位置：cc_switch（默认）或 unified（~/.agents/skills/）
+    /// Skill 存储位置：app（默认）或 unified（~/.agents/skills/）
     #[serde(default)]
     pub skill_storage_location: SkillStorageLocation,
 
@@ -717,6 +718,7 @@ impl AppSettings {
         // settings.json 保留用于旧版本迁移和无数据库场景
         Some(
             crate::config::get_home_dir()
+                // 数据目录沿用 .cc-switch：兼容既有用户数据与上游布局（白牌不改这个路径）
                 .join(".cc-switch")
                 .join("settings.json"),
         )

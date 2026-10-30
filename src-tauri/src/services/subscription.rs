@@ -717,7 +717,7 @@ pub(crate) enum CodexKeychainLogin {
     /// 确定没有，或者内容不是 JSON（Codex 自己也读不了，auto 模式同样退回 `auth.json`）。
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     Missing,
-    /// 读不出来：不是 macOS（Windows、Linux 的凭据库 CC Switch 读不了），或者 macOS 上
+    /// 读不出来：不是 macOS（Windows、Linux 的凭据库本应用读不了），或者 macOS 上
     /// 访问被拒。Codex 看到的可能是另一个登录，不能拿 `auth.json` 顶替。
     Unknown,
 }
@@ -963,7 +963,7 @@ async fn query_codex_reset_credits(
 ///
 /// 参数化 `tool_label` 和 `expired_message` 让该函数可被两个调用点共用：
 /// - `"codex"` + "Please re-login with Codex CLI."（CLI 凭据路径）
-/// - `"codex_oauth"` + "Please re-login via cc-switch."（cc-switch 自管 OAuth 路径）
+/// - `"codex_oauth"` + "Please re-login via ai-coding-tools."（ai-coding-tools 自管 OAuth 路径）
 pub(crate) async fn query_codex_quota(
     access_token: &str,
     account_id: Option<&str>,
