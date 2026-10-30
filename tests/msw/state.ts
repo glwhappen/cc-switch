@@ -17,6 +17,8 @@ type LiveProviderIdsByApp = Record<
 >;
 
 const createDefaultProviders = (): ProvidersByApp => ({
+  // Codex 桌面版与 Codex CLI 共用同一份配置，测试里没有独立数据
+  "codex-desktop": {},
   claude: {
     "claude-1": {
       id: "claude-1",
@@ -83,6 +85,7 @@ const createDefaultProviders = (): ProvidersByApp => ({
 const createDefaultCurrent = (): CurrentProviderState => ({
   claude: "claude-1",
   "claude-desktop": "",
+  "codex-desktop": "",
   codex: "codex-1",
   gemini: "gemini-1",
   grokbuild: "",
@@ -163,6 +166,7 @@ const createDefaultSessionMessages = (): Record<string, SessionMessage[]> => ({
 let sessionsState = createDefaultSessions();
 let sessionMessagesState = createDefaultSessionMessages();
 let mcpConfigs: McpConfigState = {
+  "codex-desktop": {},
   claude: {
     sample: {
       id: "sample",
@@ -293,6 +297,7 @@ export const resetProviderState = () => {
   };
   appConfigDirOverride = null;
   mcpConfigs = {
+    "codex-desktop": {},
     claude: {
       sample: {
         id: "sample",

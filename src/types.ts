@@ -310,6 +310,7 @@ export interface VisibleApps {
   claude: boolean;
   "claude-desktop": boolean;
   codex: boolean;
+  "codex-desktop": boolean;
   gemini: boolean;
   grokbuild: boolean;
   opencode: boolean;
@@ -777,6 +778,8 @@ export interface McpApps {
   claude: boolean;
   "claude-desktop"?: boolean;
   codex: boolean;
+  // Codex 桌面版与 Codex CLI 共用一份配置，MCP 走 codex 那一份
+  "codex-desktop"?: boolean;
   gemini: boolean;
   grokbuild?: boolean;
   opencode: boolean;

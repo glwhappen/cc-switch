@@ -228,9 +228,9 @@ function MainDirectory({
     todayHitRate,
     authNeedsAttention,
   } = useSidebarStatus();
-  // 顺序跟应用页拖出来的一致
+  // 顺序跟应用页拖出来的一致。Codex 桌面版与 Codex 共用配置和这一项，不单独占侧栏位置。
   const apps = orderAppIds(settings?.appOrder).filter(
-    (app) => visibleApps[app],
+    (app) => visibleApps[app] && app !== "codex-desktop",
   );
   const onAppPage = isAppPage(view);
 

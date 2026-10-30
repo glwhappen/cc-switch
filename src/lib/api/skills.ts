@@ -22,6 +22,8 @@ export interface SkillApps {
   claude: boolean;
   "claude-desktop"?: boolean;
   codex: boolean;
+  // Codex 桌面版与 Codex CLI 共用同一个 skills 目录
+  "codex-desktop"?: boolean;
   gemini: boolean;
   grokbuild?: boolean;
   opencode: boolean;
