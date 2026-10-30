@@ -15,14 +15,16 @@ import sys
 
 # Tauri updater 用 time::OffsetDateTime::parse(..., Rfc3339) 严格解析，必须完整到秒并带时区。
 RFC3339 = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+# Windows / Linux 必须有：这两个平台是我们的主力用户。
 REQUIRED_PLATFORMS = {
-    "darwin-aarch64",
-    "darwin-x86_64",
     "windows-x86_64",
     "windows-aarch64",
     "linux-x86_64",
     "linux-aarch64",
 }
+# macOS 允许暂缺（GitHub 的 macOS runner 会因容量排队 15 分钟仍拿不到机器，
+# 不能因为这个把 Windows/Linux 的发布一起卡住）。缺了只警告，不失败。
+OPTIONAL_PLATFORMS = {"darwin-aarch64", "darwin-x86_64"}
 
 
 def main() -> int:
@@ -52,6 +54,9 @@ def main() -> int:
     if missing:
         print(f"❌ 缺少平台: {sorted(missing)}", file=sys.stderr)
         return 1
+    if not platforms.keys() & OPTIONAL_PLATFORMS:
+        print("⚠️ 本次清单不含 macOS（runner 容量问题上未出包），Windows/Linux 照常发布",
+              file=sys.stderr)
 
     for key, value in platforms.items():
         if not isinstance(value, dict) or not value.get("signature") or not value.get("url"):

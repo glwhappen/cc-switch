@@ -836,10 +836,16 @@ jobs:
   publish-release:
     name: Publish GitHub Release
     runs-on: ubuntu-22.04
-    needs: [release, macos-release]
+    needs: [whats-new-check, release, macos-release]
     # 只有推 tag 才发布。手动触发时也能选 tag 作为运行版本，单看 ref_type 会把干跑当成正式发布，
-    # 覆盖已发布 release 的正文和安装包
-    if: github.event_name == 'push' && github.ref_type == 'tag'
+    # 覆盖已发布 release 的正文和安装包。
+    # 不要求 macos-release 成功：GitHub 的 macOS runner 会因容量排队 15 分钟仍拿不到机器，
+    # 不能因为 macOS 缺包把 Windows/Linux 一起卡住；macOS 之后单独重跑成功会在同一次发布里补上。
+    if: >-
+      always() && !cancelled()
+      && github.event_name == 'push' && github.ref_type == 'tag'
+      && needs.whats-new-check.result == 'success'
+      && needs.release.result == 'success'
     permissions:
       contents: write
     steps:
