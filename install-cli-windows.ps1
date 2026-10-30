@@ -1,4 +1,4 @@
-# 用途：在 Windows 上验证 HSFP Code 的「镜像直下安装」是否可用（不依赖 Node、不访问 claude.ai / chatgpt.com）
+# 用途：在 Windows 上验证 CC Switch 的「镜像直下安装」是否可用（不依赖 Node、不访问 claude.ai / chatgpt.com）
 #       会分别装 Claude Code 与 Codex，装完各自 --version 自检，并打印装到哪、用的什么版本。
 # 用法：右键「使用 PowerShell 运行」；
 #       或打开 PowerShell 执行：  powershell -NoProfile -ExecutionPolicy Bypass -File .\install-cli-windows.ps1
@@ -134,7 +134,7 @@ function Install-Codex {
   }
 }
 
-Write-Host "HSFP Code - Windows 镜像安装验证脚本" -ForegroundColor Yellow
+Write-Host "CC Switch - Windows 镜像安装验证脚本" -ForegroundColor Yellow
 Write-Host "PowerShell $($PSVersionTable.PSVersion) / $([System.Environment]::OSVersion.VersionString) / $env:PROCESSOR_ARCHITECTURE"
 $tarOk = (Get-Command tar.exe -ErrorAction SilentlyContinue) -ne $null
 if (-not $tarOk) {
