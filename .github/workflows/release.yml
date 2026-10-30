@@ -920,7 +920,9 @@ jobs:
           done
           # 缺任一平台都不能发：缺的那批用户会静默收不到更新
           missing=""
-          [ -n "$mac_sig" ] || missing="$missing macOS"
+          # macOS 允许暂缺：GitHub 的 macOS runner 会因容量排队 15 分钟仍拿不到机器，
+          # 不能因为 macOS 缺包把 Windows/Linux 的发布一起卡死。缺了只告警。
+          [ -n "$mac_sig" ] || echo "⚠️ 本次无 macOS 产物（runner 容量问题会重试），清单里不含 darwin 平台"
           [ -n "$win_x64_sig" ] || missing="$missing windows-x86_64"
           [ -n "$win_arm64_sig" ] || missing="$missing windows-aarch64"
           [ -n "$linux_x64_sig" ] || missing="$missing linux-x86_64"
