@@ -5030,5 +5030,39 @@
       "providerMissing": "This Oh My Pi provider is no longer saved.",
       "legacyModelsJson": "Oh My Pi still has a legacy models.json, which omp migrates to models.yml on its next start. Run omp once, then add the provider again."
     }
+  },
+  "simpleMode": {
+    "title": "Set up your AI coding tools in one click",
+    "subtitle": "Just press the button below — there is nothing to choose.",
+    "statusLoading": "Checking…",
+    "statusReady": "Ready",
+    "statusAlmost": "One step left",
+    "statusWorking": "Installing…",
+    "getKey": "Get a key",
+    "oneClickInstall": "Set it up",
+    "installing": "Installing, keep this window open…",
+    "startUsing": "Start using",
+    "alreadyInstalled": "I already installed them",
+    "pasteHint": "Paste the key you just got here (starts with sk-)",
+    "keyConfirm": "OK",
+    "keySaved": "Key saved",
+    "keyInvalid": "That key does not look right",
+    "getKeyAgain": "No key yet? Get one from the website",
+    "details": "What got installed",
+    "installedTitle": "Installed",
+    "nothingInstalled": "Nothing yet",
+    "failedTitle": "This step did not finish",
+    "copyError": "Copy the error",
+    "errorCopied": "Error copied",
+    "enterAdvanced": "Advanced mode",
+    "backToSimple": "Back to simple mode",
+    "backToSimpleHint": "Return to the one-button screen",
+    "stepSkipped": "(already installed, skipped)",
+    "step": {
+      "provider": "Save the HSFP provider",
+      "claude": "Install Claude Code",
+      "codex": "Install Codex",
+      "activate": "Make it the current provider"
+    }
   }
 }

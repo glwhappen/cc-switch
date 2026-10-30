@@ -5008,5 +5008,39 @@
       "renameProvider": "Oh My Pi sağlayıcı anahtarları yeniden adlandırılamaz.",
       "providerMissing": "Bu Oh My Pi sağlayıcısı artık kayıtlı değil."
     }
+  },
+  "simpleMode": {
+    "title": "AI kodlama ortamını tek tıkla kur",
+    "subtitle": "Aşağıdaki düğmeye basmanız yeterli, seçim yapmanız gerekmiyor.",
+    "statusLoading": "Kontrol ediliyor…",
+    "statusReady": "Hazır",
+    "statusAlmost": "Bir adım kaldı",
+    "statusWorking": "Kuruluyor…",
+    "getKey": "Anahtar al",
+    "oneClickInstall": "Tek tıkla kur",
+    "installing": "Kuruluyor, pencereyi kapatmayın…",
+    "startUsing": "Kullanmaya başla",
+    "alreadyInstalled": "Zaten kurdum",
+    "pasteHint": "Aldığınız anahtarı buraya yapıştırın (sk- ile başlar)",
+    "keyConfirm": "Tamam",
+    "keySaved": "Anahtar kaydedildi",
+    "keyInvalid": "Anahtar biçimi hatalı",
+    "getKeyAgain": "Anahtarınız yok mu? Web sitesinden alın",
+    "details": "Neler kuruldu",
+    "installedTitle": "Kurulu",
+    "nothingInstalled": "Henüz yok",
+    "failedTitle": "Bu adım tamamlanmadı",
+    "copyError": "Hatayı kopyala",
+    "errorCopied": "Hata kopyalandı",
+    "enterAdvanced": "Gelişmiş mod",
+    "backToSimple": "Basit moda dön",
+    "backToSimpleHint": "Tek düğmeli ekrana dön",
+    "stepSkipped": "(kurulu olduğu için atlandı)",
+    "step": {
+      "provider": "HSFP sağlayıcısını kaydet",
+      "claude": "Claude Code kur",
+      "codex": "Codex kur",
+      "activate": "Geçerli sağlayıcı yap"
+    }
   }
 }

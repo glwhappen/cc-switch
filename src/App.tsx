@@ -35,6 +35,9 @@ import {
   type ProviderSwitchEvent,
 } from "@/lib/api";
 import { checkAllEnvConflicts, checkEnvConflicts } from "@/lib/api/env";
+import { SimpleModePage } from "@/components/SimpleMode/SimpleModePage";
+import { useUiMode } from "@/components/SimpleMode/useUiMode";
+import { BackToSimpleButton } from "@/components/SimpleMode/BackToSimpleButton";
 import { useProviderActions } from "@/hooks/useProviderActions";
 import { openclawKeys, useOpenClawHealth } from "@/hooks/useOpenClaw";
 import { hermesKeys, useOpenHermesWebUI } from "@/hooks/useHermes";
@@ -165,6 +168,8 @@ function App() {
 
   const [activeApp, setActiveApp] = useState<AppId>(getInitialApp);
   const sharedFeatureApp = sharedFeatureAppOf(activeApp);
+  // 简易 / 高级模式：新用户默认简易模式，选过就记住（见 useUiMode 注释）
+  const { mode: uiMode, setMode: setUiMode } = useUiMode();
   const [currentView, setCurrentView] = useState<View>(readStoredView);
   const [settingsSection, setSettingsSection] =
     useState<SettingsSection>("general");
@@ -1729,11 +1734,24 @@ function App() {
     return isAppPage(currentView) ? renderAppPage() : renderGlobalPage();
   };
 
+  // 简易模式：整页只有首屏那一套（状态 + 一个主按钮 + 高级模式入口）。
+  // 直接拦在顶层 return，不挂载侧栏/工作区，保证「打开就是几个按钮」。
+  if (uiMode === "simple") {
+    return (
+      <WindowControlsContext.Provider
+        value={useAppWindowControls ? <WindowControls /> : null}
+      >
+        <SimpleModePage onEnterAdvanced={() => setUiMode("advanced")} />
+      </WindowControlsContext.Provider>
+    );
+  }
+
   return (
     <WindowControlsContext.Provider
       value={useAppWindowControls ? <WindowControls /> : null}
     >
       <div className="flex h-screen overflow-hidden bg-app text-fg-1 selection:bg-action/25">
+        <BackToSimpleButton onBack={() => setUiMode("simple")} />
         <Sidebar
           activeApp={activeApp}
           view={currentView}

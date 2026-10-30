@@ -5030,5 +5030,39 @@
       "providerMissing": "この Oh My Pi プロバイダは保存済みリストにありません。",
       "legacyModelsJson": "Oh My Pi にはまだ旧形式の models.json があり、omp は次回起動時にこれを models.yml へ移行します。omp を一度起動してから、もう一度プロバイダを追加してください。"
     }
+  },
+  "simpleMode": {
+    "title": "ワンクリックで AI コーディング環境を用意",
+    "subtitle": "下のボタンを押すだけ。選択肢はありません。",
+    "statusLoading": "確認中…",
+    "statusReady": "準備完了",
+    "statusAlmost": "あと 1 ステップ",
+    "statusWorking": "インストール中…",
+    "getKey": "キーを取得",
+    "oneClickInstall": "まとめてセットアップ",
+    "installing": "インストール中です。ウィンドウを閉じないでください…",
+    "startUsing": "使い始める",
+    "alreadyInstalled": "すでにインストール済み",
+    "pasteHint": "取得したキーをここに貼り付け（sk- で始まる）",
+    "keyConfirm": "OK",
+    "keySaved": "キーを保存しました",
+    "keyInvalid": "キーの形式が正しくありません",
+    "getKeyAgain": "まだ取得していない場合は公式サイトへ",
+    "details": "インストール内容を見る",
+    "installedTitle": "インストール済み",
+    "nothingInstalled": "まだありません",
+    "failedTitle": "このステップは完了しませんでした",
+    "copyError": "エラーをコピー",
+    "errorCopied": "エラーをコピーしました",
+    "enterAdvanced": "詳細モード",
+    "backToSimple": "かんたんモードに戻る",
+    "backToSimpleHint": "ボタンだけの画面に戻る",
+    "stepSkipped": "（導入済みのため省略）",
+    "step": {
+      "provider": "HSFP プロバイダーを保存",
+      "claude": "Claude Code をインストール",
+      "codex": "Codex をインストール",
+      "activate": "現在のプロバイダーに設定"
+    }
   }
 }

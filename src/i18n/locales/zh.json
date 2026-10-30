@@ -5030,5 +5030,39 @@
       "providerMissing": "此 Oh My Pi 供应商已不在保存的列表中。",
       "legacyModelsJson": "Oh My Pi 目录里还是旧的 models.json，omp 会在下次启动时把它迁移成 models.yml。请先运行一次 omp，再回来添加供应商。"
     }
+  },
+  "simpleMode": {
+    "title": "一键把 AI 编程环境装好",
+    "subtitle": "点下面这个按钮就行，不需要做任何选择。",
+    "statusLoading": "正在检查…",
+    "statusReady": "已就绪",
+    "statusAlmost": "还差一步",
+    "statusWorking": "正在安装…",
+    "getKey": "去领一个 Key",
+    "oneClickInstall": "一键装好",
+    "installing": "正在装，别关窗口…",
+    "startUsing": "开始使用",
+    "alreadyInstalled": "我已经装过了",
+    "pasteHint": "把刚领到的 Key 粘到这里（以 sk- 开头）",
+    "keyConfirm": "确定",
+    "keySaved": "Key 已保存",
+    "keyInvalid": "Key 格式不对",
+    "getKeyAgain": "还没领？去官网领一个",
+    "details": "看看装了什么",
+    "installedTitle": "已安装",
+    "nothingInstalled": "还没装",
+    "failedTitle": "这一步没成功",
+    "copyError": "复制错误信息",
+    "errorCopied": "错误信息已复制",
+    "enterAdvanced": "高级模式",
+    "backToSimple": "返回简易模式",
+    "backToSimpleHint": "回到只有一个按钮的界面",
+    "stepSkipped": "（已装过，跳过）",
+    "step": {
+      "provider": "写入 HSFP 供应商",
+      "claude": "安装 Claude Code",
+      "codex": "安装 Codex",
+      "activate": "设为当前供应商"
+    }
   }
 }

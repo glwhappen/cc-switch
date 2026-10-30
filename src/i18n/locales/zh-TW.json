@@ -5031,5 +5031,39 @@
       "providerMissing": "此 Oh My Pi 供應商已不在儲存的清單中。",
       "legacyModelsJson": "Oh My Pi 目錄裡仍是舊的 models.json，omp 會在下次啟動時將它遷移為 models.yml。請先執行一次 omp，再回來新增供應商。"
     }
+  },
+  "simpleMode": {
+    "title": "一鍵把 AI 程式設計環境裝好",
+    "subtitle": "點下面這個按鈕就好，不需要做任何選擇。",
+    "statusLoading": "正在檢查…",
+    "statusReady": "已就緒",
+    "statusAlmost": "還差一步",
+    "statusWorking": "正在安裝…",
+    "getKey": "去領一個 Key",
+    "oneClickInstall": "一鍵裝好",
+    "installing": "正在裝，別關視窗…",
+    "startUsing": "開始使用",
+    "alreadyInstalled": "我已經裝過了",
+    "pasteHint": "把剛領到的 Key 貼到這裡（以 sk- 開頭）",
+    "keyConfirm": "確定",
+    "keySaved": "Key 已儲存",
+    "keyInvalid": "Key 格式不對",
+    "getKeyAgain": "還沒領？去官網領一個",
+    "details": "看看裝了什麼",
+    "installedTitle": "已安裝",
+    "nothingInstalled": "還沒裝",
+    "failedTitle": "這一步沒成功",
+    "copyError": "複製錯誤訊息",
+    "errorCopied": "錯誤訊息已複製",
+    "enterAdvanced": "進階模式",
+    "backToSimple": "返回簡易模式",
+    "backToSimpleHint": "回到只有一個按鈕的介面",
+    "stepSkipped": "（已裝過，跳過）",
+    "step": {
+      "provider": "寫入 HSFP 供應商",
+      "claude": "安裝 Claude Code",
+      "codex": "安裝 Codex",
+      "activate": "設為目前供應商"
+    }
   }
 }
