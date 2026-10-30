@@ -1,0 +1,19 @@
+{
+  "version": "4.0.23",
+  "items": [
+    {
+      "type": "new",
+      "zh": "应用页新增 Codex 桌面版：可检测、一键配置密钥",
+      "zh-TW": "應用頁新增 Codex 桌面版：可偵測、一鍵設定金鑰",
+      "en": "Apps page adds Codex Desktop: detect install and configure your key",
+      "ja": "アプリページに Codex デスクトップ版を追加（検出とキー設定）"
+    },
+    {
+      "type": "improve",
+      "zh": "配置前自动备份原文件，改错了能还原",
+      "zh-TW": "設定前自動備份原檔，改錯能還原",
+      "en": "Your config is backed up before changes, so you can always revert",
+      "ja": "設定変更前に自動バックアップするので、いつでも戻せます"
+    }
+  ]
+}
