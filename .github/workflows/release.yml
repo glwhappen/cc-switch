@@ -849,6 +849,11 @@ jobs:
     permissions:
       contents: write
     steps:
+      # 必须 checkout：Generate latest.json 要跑仓库里的
+      # .github/scripts/validate-updater-manifest.py（这个 job 之前只下载产物，没有源码）
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Download built release artifacts
         uses: actions/download-artifact@v8
         with:

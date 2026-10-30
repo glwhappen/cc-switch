@@ -1,0 +1,26 @@
+{
+  "version": "4.0.22",
+  "items": [
+    {
+      "type": "new",
+      "zh": "新增简易模式：打开只有按钮，点一下全装好",
+      "zh-TW": "新增簡易模式：開啟只有按鈕，點一下全裝好",
+      "en": "New simple mode: one button on launch sets up your key, Claude Code and Codex",
+      "ja": "かんたんモードを追加。起動時のボタン 1 つでキーと Claude Code / Codex を導入"
+    },
+    {
+      "type": "improve",
+      "zh": "想用完整功能点底部「高级模式」，随时能切回来",
+      "zh-TW": "想用完整功能點底部「進階模式」，隨時能切回來",
+      "en": "Tap \"Advanced mode\" for the full interface, and switch back any time",
+      "ja": "詳しい機能は「詳細モード」へ。いつでも戻せます"
+    },
+    {
+      "type": "fix",
+      "zh": "修复自动更新检查失败，恢复正常应用内更新",
+      "zh-TW": "修復自動更新檢查失敗，恢復正常應用內更新",
+      "en": "Fix the broken update check so in-app updates work again",
+      "ja": "自動更新の確認が失敗する問題を修正"
+    }
+  ]
+}
