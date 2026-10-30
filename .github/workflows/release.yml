@@ -453,6 +453,11 @@ jobs:
     name: Bundle macOS release
     runs-on: macos-14
     needs: macos-binary
+    # 没有 Apple 证书时出「未签名」包（首次打开需在系统设置里手动允许）。步骤的 `if:`
+    # 读不到 secrets 上下文，所以先在这里映射成 env 再判断；配了证书则走原来的签名+公证流程。
+    env:
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
 
     steps:
       - name: Checkout
@@ -508,6 +513,7 @@ jobs:
           password: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Import Apple signing certificate
+        if: env.APPLE_CERTIFICATE != ''
         shell: bash
         run: |
           set -euo pipefail
@@ -580,6 +586,14 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -euo pipefail
+          # 未配 Apple 证书时：把签名/公证相关环境变量清空，Tauri 会跳过 codesign 与 notarize，
+          # 直接出未签名的 .app（Gatekeeper 首次打开需手动允许）。空的 identity 反而会让
+          # codesign 以 `--sign ""` 失败，所以必须 unset 而不是留空字符串。
+          if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "⚠️ 未配置 Apple 签名证书：产出未签名 macOS 包"
+            unset APPLE_SIGNING_IDENTITY
+            unset APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID
+          fi
           max_attempts=3
           for attempt in $(seq 1 "$max_attempts"); do
             echo "=== macOS bundle/notarization attempt ${attempt}/${max_attempts} ==="
@@ -638,8 +652,12 @@ jobs:
           fi
 
           # Staple notarization ticket to .app (Tauri already notarized it)
-          xcrun stapler staple "$APP_PATH"
-          echo "✅ .app stapled"
+          if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            xcrun stapler staple "$APP_PATH"
+            echo "✅ .app stapled"
+          else
+            echo "⚠️ 未签名构建：跳过 staple"
+          fi
 
           # 1) Collect .tar.gz (updater artifact)
           NEW_TAR_GZ="CC-Switch-${VERSION}-macOS.tar.gz"
@@ -657,9 +675,13 @@ jobs:
           echo "macOS zip ready: $NEW_ZIP"
 
           # 3) Create styled DMG with create-dmg (Tauri's built-in DMG styling doesn't work on CI)
-          if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
-            echo "❌ APPLE_SIGNING_IDENTITY is missing before DMG creation" >&2
-            exit 1
+          # 未签名构建不传 --codesign；空数组在 bash 3.2（macOS 自带）下配合 set -u 要用
+          # ${ARR[@]+"${ARR[@]}"} 展开，否则会报 unbound variable。
+          CODESIGN_ARGS=()
+          if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            CODESIGN_ARGS=(--codesign "$APPLE_SIGNING_IDENTITY")
+          else
+            echo "⚠️ 未签名构建：DMG 不做 codesign"
           fi
 
           HOMEBREW_NO_AUTO_UPDATE=1 brew install create-dmg
@@ -678,7 +700,7 @@ jobs:
             --icon "CC Switch.app" 180 220 \
             --hide-extension "CC Switch.app" \
             --app-drop-link 480 220 \
-            --codesign "$APPLE_SIGNING_IDENTITY" \
+            ${CODESIGN_ARGS[@]+"${CODESIGN_ARGS[@]}"} \
             --no-internet-enable \
             "release-assets/$NEW_DMG" \
             "$DMG_STAGE_DIR"
@@ -687,6 +709,7 @@ jobs:
           echo "✅ Styled DMG created: $NEW_DMG"
 
       - name: Notarize macOS DMG
+        if: env.APPLE_ID != ''
         shell: bash
         timeout-minutes: 30
         env:
@@ -731,6 +754,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ -z "${APPLE_ID:-}" ]; then
+            echo "⚠️ 未签名构建：跳过 codesign / spctl / stapler 校验，只确认产物存在"
+            ls -la release-assets
+            DMG_PATH=$(find release-assets -maxdepth 1 -name "*.dmg" -type f | head -1 || true)
+            test -n "$DMG_PATH"
+            test -f "$DMG_PATH"
+            echo "✅ 未签名 DMG 已生成：$DMG_PATH"
+            exit 0
+          fi
 
           # Verify .app (from Tauri bundle)
           APP_PATH=""
