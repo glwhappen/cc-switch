@@ -78,7 +78,8 @@ export const providerPresets: ProviderPreset[] = [
   // ===== 自有网关预设（置顶）=======================================
   // 半价分组只给 deepseek 系模型开了渠道（2026-10-31 实测）：deepseek-flash /
   // deepseek-v4.1-flash 可用；不要写 claude-* / gpt-* 之类没渠道的模型，否则 503。
-  // 这里走 Anthropic 原生入口（base 用站点根，不加 /v1），渠道 39。
+  // 按郭老师定的，四档统一用 deepseek-flash（渠道 39 = DeepSeek 官方 Anthropic 原生，
+  // base 用站点根、不加 /v1）。
   {
     name: "HSFP",
     websiteUrl: "https://new-api.hsfp.cn",
@@ -90,7 +91,7 @@ export const providerPresets: ProviderPreset[] = [
         ANTHROPIC_MODEL: "deepseek-flash",
         ANTHROPIC_DEFAULT_HAIKU_MODEL: "deepseek-flash",
         ANTHROPIC_DEFAULT_SONNET_MODEL: "deepseek-flash",
-        ANTHROPIC_DEFAULT_OPUS_MODEL: "deepseek-v4.1-flash",
+        ANTHROPIC_DEFAULT_OPUS_MODEL: "deepseek-flash",
       },
     },
     endpointCandidates: ["https://new-api.hsfp.cn"],

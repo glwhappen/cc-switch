@@ -10,10 +10,10 @@
     },
     {
       "type": "fix",
-      "zh": "Codex 预设默认模型改为 deepseek-v4.1-flash，修掉选完预设仍报 503 无可用渠道的问题",
-      "zh-TW": "Codex 預設預設模型改為 deepseek-v4.1-flash，修掉選完預設仍報 503 無可用渠道的問題",
-      "en": "Codex preset now defaults to deepseek-v4.1-flash, fixing the 503 \"no available channel\" error after picking the preset",
-      "ja": "Codex プリセットの既定モデルを deepseek-v4.1-flash に変更し、プリセット選択後に 503（利用可能なチャネルなし）になる問題を修正"
+      "zh": "Codex 预设默认模型改为 deepseek-flash，修掉选完预设仍报 503 无可用渠道的问题",
+      "zh-TW": "Codex 預設預設模型改為 deepseek-flash，修掉選完預設仍報 503 無可用渠道的問題",
+      "en": "Codex preset now defaults to deepseek-flash, fixing the 503 \"no available channel\" error after picking the preset",
+      "ja": "Codex プリセットの既定モデルを deepseek-flash に変更し、プリセット選択後に 503（利用可能なチャネルなし）になる問題を修正"
     },
     {
       "type": "improve",
