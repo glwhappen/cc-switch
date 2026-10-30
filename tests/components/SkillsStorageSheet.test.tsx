@@ -118,7 +118,7 @@ describe("SkillsStorageSheet", () => {
     m.installed = [{ id: "a" }, { id: "b" }];
     renderDialog();
 
-    expect(radio("skills.storageSheet.locationCcSwitch")).toBeChecked();
+    expect(radio("skills.storageSheet.locationApp")).toBeChecked();
     expect(moveButton()).toBeDisabled();
     // 原因是看得见的一行，按钮用 aria-describedby 指向它
     expect(moveButton()).toHaveAccessibleDescription(
