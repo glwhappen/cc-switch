@@ -25,6 +25,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/toast";
 import { providersApi, settingsApi } from "@/lib/api";
+import { markSeen } from "@/lib/whatsNew";
+import { getVersion } from "@tauri-apps/api/app";
 import { HSFP_PRESET_NAME, normalizeApiKey } from "./providers";
 import { useOneClickSetup, SIMPLE_FLOW_STEP_ORDER } from "./useOneClickSetup";
 import type { Provider } from "@/types";
@@ -160,6 +162,34 @@ export function SimpleModePage({
     return t("simpleMode.statusAlmost");
   }, [busy, ready, t]);
 
+  /**
+   * 进高级界面前，把「首启三步向导」和「更新摘要」都记成已看过：
+   * 简易模式已经把同一件事（拿 Key → 装好）办完了，再弹向导/更新弹窗纯属打扰。
+   * 写失败也不拦用户进界面。
+   */
+  const acknowledgeGuides = useCallback(async () => {
+    try {
+      const settings = await settingsApi.get();
+      // 与首启向导同一套写法：webdavSync 不回写，界面改版提示与更新摘要一并记成已看过
+      const { webdavSync: _omit, ...rest } = settings;
+      const version = await getVersion().catch(() => undefined);
+      await settingsApi.save({
+        ...rest,
+        firstRunNoticeConfirmed: true,
+        newLayoutNoticeConfirmed: true,
+        whatsNewSeenVersion: markSeen(settings.whatsNewSeenVersion, version),
+      });
+      await queryClient.invalidateQueries({ queryKey: ["settings"] });
+    } catch (error) {
+      console.error("[SimpleMode] acknowledge guides failed", error);
+    }
+  }, [queryClient]);
+
+  const leaveToAdvanced = useCallback(() => {
+    void acknowledgeGuides();
+    onEnterAdvanced();
+  }, [acknowledgeGuides, onEnterAdvanced]);
+
   const openKeySite = useCallback(() => {
     void settingsApi.openExternal(HSFP_SITE_URL);
     setShowKeyInput(true);
@@ -184,7 +214,7 @@ export function SimpleModePage({
       return;
     }
     if (ready) {
-      onEnterAdvanced();
+      leaveToAdvanced();
       return;
     }
     if (!apiKey) {
@@ -192,7 +222,7 @@ export function SimpleModePage({
       return;
     }
     void setup.run();
-  }, [apiKey, onEnterAdvanced, openKeySite, ready, setup, status?.hasKey]);
+  }, [apiKey, leaveToAdvanced, openKeySite, ready, setup, status?.hasKey]);
 
   const handleConfigureOnly = useCallback(() => {
     if (!apiKey) {
@@ -429,7 +459,7 @@ export function SimpleModePage({
           <button
             type="button"
             className="inline-flex items-center gap-1.5 text-caption text-fg-2 underline-offset-4 hover:text-fg-1 hover:underline"
-            onClick={onEnterAdvanced}
+            onClick={leaveToAdvanced}
           >
             <Settings2 className="h-3.5 w-3.5" />
             {t("simpleMode.enterAdvanced")}
