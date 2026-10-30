@@ -216,7 +216,7 @@ export function SkillsStorageSheet({
                     aria-describedby="skills-storage-cc-path"
                     onChange={() => setPendingLocation("app")}
                   />
-                  {t("skills.storageSheet.locationCcSwitch")}
+                  {t("skills.storageSheet.locationApp")}
                 </label>
                 <div className="flex min-w-0 items-center gap-2 pl-[26px]">
                   <code
