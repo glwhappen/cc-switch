@@ -997,13 +997,16 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: AI Coding Tools ${{ github.ref_name }}
-          prerelease: true
+          # 必须是正式发布：预发布(release) 会让 /releases/latest 与
+          # releases/latest/download 一直 404，官网和 updater 备用端点都会失效。
+          prerelease: false
           body: |
             ## AI Coding Tools ${{ github.ref_name }}
 
-            🌐 **Only Official Website / 唯一官方网站 / 唯一の公式サイト**: [ccswitch.io](https://ccswitch.io)
+            🌐 **唯一官方网站 / Official Website**: [cc.hsfp.cn](https://cc.hsfp.cn/)
 
-            Claude Code 供应商切换工具
+            国内可直接使用的 AI 编程工具供应商管理器（白牌分发版，基于开源项目 CC Switch v4.0.20，MIT）。
+            相对原版只做两件事：**一键安装 CLI 走国内镜像**（不依赖 Node）、**内置 HSFP 供应商预设**。
 
             ### 下载
 
