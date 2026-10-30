@@ -6,7 +6,7 @@ import { SkillsStorageSheet } from "@/components/skills/SkillsStorageSheet";
 
 const m = vi.hoisted(() => ({
   settings: {
-    skillStorageLocation: "cc_switch",
+    skillStorageLocation: "app",
     skillSyncMethod: "auto",
   } as Record<string, string | undefined>,
   installed: [] as { id: string }[],
@@ -59,7 +59,7 @@ const moveButton = () =>
 
 describe("SkillsStorageSheet", () => {
   beforeEach(() => {
-    m.settings = { skillStorageLocation: "cc_switch", skillSyncMethod: "auto" };
+    m.settings = { skillStorageLocation: "app", skillSyncMethod: "auto" };
     m.installed = [];
     m.autoSaveSettings.mockResolvedValue(undefined);
   });
@@ -83,7 +83,7 @@ describe("SkillsStorageSheet", () => {
   );
 
   it("treats a missing sync method as automatic, like the backend default", () => {
-    m.settings = { skillStorageLocation: "cc_switch" };
+    m.settings = { skillStorageLocation: "app" };
     renderDialog();
 
     expect(radio("skills.storageSheet.syncAuto")).toBeChecked();
