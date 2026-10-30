@@ -4217,7 +4217,25 @@
       "mcode": "安装时运行官方安装脚本，失败时改用 npm",
       "agy": "安装时运行官方安装脚本",
       "omp": "安装时运行官方安装脚本"
-    }
+    },
+    "codexDesktopHelp": "Codex 桌面版与 Codex 命令行共用同一份配置文件，所以配置方式和命令行完全一样。",
+    "codexDesktopUnsupported": "不支持",
+    "codexDesktopNotInstalled": "未安装",
+    "codexDesktopMorePackages": "另有 {{count}} 个",
+    "codexDesktopConfigureKey": "配置我的 Key",
+    "codexDesktopHowToDownload": "如何下载",
+    "codexDesktopKeyTitle": "写入 Codex 配置",
+    "codexDesktopKeyHint": "写入前会先备份原文件；只改默认模型和 hsfp 供应商这两处，其它段原样保留。桌面版不继承环境变量，Key 会以请求头的形式写进配置。",
+    "codexDesktopKeyPlaceholder": "sk-...",
+    "codexDesktopConfigured": "已把默认模型切到 HSFP，想改回来用备份文件（{{path}}）",
+    "codexDesktopConfiguredNoBackup": "已把默认模型切到 HSFP（配置文件是新建的，没有旧内容需要备份）",
+    "codexDesktopDownloadTitle": "安装 Codex 桌面版",
+    "codexDesktopDownloadWindows": "Windows：在 Microsoft Store 里搜索 Codex（或 ChatGPT）安装。",
+    "codexDesktopDownloadMacos": "macOS：从官方页面下载安装包。",
+    "codexDesktopDownloadMacosButton": "打开官方下载页",
+    "codexDesktopDownloadMirror": "从本站镜像下载",
+    "codexDesktopDownloadMirrorHint": "本站的桌面版下载区。",
+    "codexDesktopDownloadNote": "安装包约 1GB。我们这里不代下，也不做静默安装：请自己下载安装完成后再回来。"
   },
   "appPage": {
     "moreActions": "{{name}} 的更多操作",

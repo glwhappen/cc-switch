@@ -8,7 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   closestCenter,
   DndContext,
@@ -43,7 +43,12 @@ import {
   Trash2,
 } from "lucide-react";
 import type { AppId } from "@/lib/api";
-import { providersApi } from "@/lib/api/providers";
+import { providersApi, type CodexDesktopStatus } from "@/lib/api/providers";
+import { settingsApi } from "@/lib/api/settings";
+import { useProvidersQuery } from "@/lib/query/queries";
+import { toast } from "@/lib/toast";
+import { extractErrorMessage } from "@/utils/errorUtils";
+import type { Provider } from "@/types";
 import type { ToolInstallationReport } from "@/lib/api/settings";
 import type { VisibleApps } from "@/types";
 import { DEFAULT_VISIBLE_APPS, orderAppIds } from "@/config/appConfig";
@@ -51,6 +56,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { isUpdateAvailable } from "@/lib/version";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { HelpTip } from "@/components/ui/help-tip";
 import { HoverTip } from "@/components/ui/hover-tip";
@@ -107,17 +113,24 @@ const SOURCE_LABEL: Record<string, string> = {
   pip: "pip",
 };
 
-type Row = { kind: "tool"; tool: ToolName } | { kind: "desktop" };
+/** 桌面应用：没有命令行可探，装没装由后端按应用包 / 数据目录推断，配置也走各自的配置文件。 */
+type DesktopAppId = "claude-desktop" | "codex-desktop";
+
+type Row =
+  | { kind: "tool"; tool: ToolName }
+  | { kind: "desktop"; app: DesktopAppId };
 
 const ROW_BY_APP = Object.fromEntries([
-  ["claude-desktop", { kind: "desktop" }],
+  ["claude-desktop", { kind: "desktop", app: "claude-desktop" }],
   ...TOOL_NAMES.map((tool) => [TOOL_APP_IDS[tool], { kind: "tool", tool }]),
+  // 顺序由 APP_IDS 决定：Codex Desktop 紧跟 Codex
+  ["codex-desktop", { kind: "desktop", app: "codex-desktop" }],
 ]) as Record<AppId, Row>;
 
 type RowSection = { key: string; title: string; rows: Row[] };
 
 const rowKey = (row: Row): AppId =>
-  row.kind === "desktop" ? "claude-desktop" : TOOL_APP_IDS[row.tool];
+  row.kind === "desktop" ? row.app : TOOL_APP_IDS[row.tool];
 
 // 只上下拖，且停在本组的列表框里：列表框裁掉超出的部分，拖出去整行会看不见
 const verticalDragModifiers: Modifier[] = [
@@ -182,11 +195,22 @@ export function AppsPage() {
     queryFn: () => providersApi.getClaudeDesktopStatus(),
     staleTime: 30_000,
   });
+  const { data: codexDesktopStatus, isPending: isCodexDesktopStatusPending } =
+    useQuery({
+      queryKey: ["codex-desktop-status"],
+      queryFn: () => providersApi.getCodexDesktopStatus(),
+      staleTime: 30_000,
+    });
 
   // 按「已安装 / 未安装」分两组。Claude Desktop 没有命令可探，用后端按数据目录 / 应用包推断的结果。
   // 首次探测还没出结果时不分组，免得各行探完一个跳一个；之后重新检查时沿用上次结果，位置不动。
   const rowInstalled = (row: Row): boolean | null => {
     if (row.kind === "desktop") {
+      if (row.app === "codex-desktop") {
+        return isCodexDesktopStatusPending
+          ? null
+          : Boolean(codexDesktopStatus?.installed);
+      }
       return isDesktopStatusPending ? null : Boolean(desktopStatus?.installed);
     }
     const info = tools.toolVersionByName.get(row.tool);
@@ -336,7 +360,13 @@ export function AppsPage() {
   };
 
   const renderRow = (row: Row) =>
-    row.kind === "desktop" ? (
+    row.kind === "desktop" && row.app === "codex-desktop" ? (
+      <CodexDesktopRow
+        key="codex-desktop"
+        status={codexDesktopStatus}
+        isPending={isCodexDesktopStatusPending}
+      />
+    ) : row.kind === "desktop" ? (
       <AppRow
         key="claude-desktop"
         app="claude-desktop"
@@ -618,6 +648,253 @@ export function AppsPage() {
         onConfirm={tools.handleConfirmUpgrade}
         onCancel={tools.handleCancelUpgrade}
       />
+    </>
+  );
+}
+
+/** 本地已保存的 Codex 供应商里，HSFP 那把 key；取不到就空字符串（对话框照样能手动填）。 */
+function findHsfpApiKey(
+  providers: Record<string, Provider> | undefined,
+): string {
+  if (!providers) return "";
+  const isHsfpProvider = (provider: Provider): boolean => {
+    if (provider.name.trim().toLowerCase() === "hsfp") return true;
+    const config = provider.settingsConfig?.config;
+    return typeof config === "string" && config.includes("new-api.hsfp.cn");
+  };
+  for (const provider of Object.values(providers)) {
+    if (!isHsfpProvider(provider)) continue;
+    const auth = provider.settingsConfig?.auth;
+    const key = auth && typeof auth === "object" ? auth.OPENAI_API_KEY : null;
+    if (typeof key === "string" && key.trim()) return key.trim();
+  }
+  return "";
+}
+
+const SITE_DOWNLOAD_URL = "https://cc.hsfp.cn/";
+const OFFICIAL_DOWNLOAD_URL = "https://chatgpt.com/download";
+
+/**
+ * Codex 桌面版：与 Codex CLI 共用 `~/.codex/config.toml`，所以这里只有两件事——
+ * 装没装（后端探测），以及「配置我的 Key」（后端做备份 + 外科式写入）。
+ */
+function CodexDesktopRow({
+  status,
+  isPending,
+}: {
+  status: CodexDesktopStatus | undefined;
+  isPending: boolean;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { data: codexProviders } = useProvidersQuery("codex");
+  const [showKeyDialog, setShowKeyDialog] = useState(false);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const savedKey = findHsfpApiKey(codexProviders?.providers);
+  const supported = status?.supported ?? true;
+  const installed = Boolean(status?.installed);
+  const packages = status?.packages ?? [];
+  const [firstPackage] = packages;
+  const extraPackages = Math.max(0, packages.length - 1);
+
+  const openKeyDialog = () => {
+    setApiKey(savedKey);
+    setSaveError(null);
+    setShowKeyDialog(true);
+  };
+
+  const handleConfigure = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const result = await providersApi.configureCodexDesktop(apiKey.trim());
+      setShowKeyDialog(false);
+      // 提示里带上备份路径：想改回来的人得知道去哪儿找
+      const message = result.backupPath
+        ? t("appsPage.codexDesktopConfigured", { path: result.backupPath })
+        : t("appsPage.codexDesktopConfiguredNoBackup");
+      toast.success(message, { closeButton: true, duration: 8000 });
+      await queryClient.invalidateQueries({
+        queryKey: ["codex-desktop-status"],
+      });
+    } catch (error) {
+      // 后端错误原文（例如 Key 格式不对）直接给用户看
+      setSaveError(extractErrorMessage(error) || String(error));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const version = !supported ? (
+    <span className="text-caption text-fg-2">
+      {t("appsPage.codexDesktopUnsupported")}
+    </span>
+  ) : isPending ? null : installed ? (
+    <span className="inline-flex min-w-0 items-center justify-end gap-1 text-caption text-fg-2">
+      <span className="truncate" title={firstPackage?.name}>
+        {[firstPackage?.name, firstPackage?.version].filter(Boolean).join(" ")}
+      </span>
+      {extraPackages > 0 && (
+        <Pill>
+          {t("appsPage.codexDesktopMorePackages", { count: extraPackages })}
+        </Pill>
+      )}
+      <HelpTip title={APP_DISPLAY_NAME["codex-desktop"]} align="end">
+        {t("appsPage.codexDesktopHelp")}
+      </HelpTip>
+    </span>
+  ) : (
+    <span className="text-caption text-fg-2">
+      {t("appsPage.codexDesktopNotInstalled")}
+    </span>
+  );
+
+  const action =
+    supported && installed ? (
+      <Button variant="solid" size="compact" onClick={openKeyDialog}>
+        {t("appsPage.codexDesktopConfigureKey")}
+      </Button>
+    ) : supported ? (
+      <Button
+        variant="neutral"
+        size="compact"
+        onClick={() => setShowDownloadDialog(true)}
+      >
+        <Download className="h-3.5 w-3.5" />
+        {t("appsPage.codexDesktopHowToDownload")}
+      </Button>
+    ) : undefined;
+
+  return (
+    <>
+      <AppRow
+        app="codex-desktop"
+        name={
+          <span className="truncate">{APP_DISPLAY_NAME["codex-desktop"]}</span>
+        }
+        version={version}
+        action={action}
+        // 与 Codex 共用同一份配置和侧栏入口，不单独在侧栏占一项
+        visibility={<span />}
+      />
+
+      <Dialog open={showKeyDialog} onOpenChange={setShowKeyDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("appsPage.codexDesktopKeyTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 px-6">
+            <p className="text-body text-fg-2">
+              {t("appsPage.codexDesktopKeyHint")}
+            </p>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="codex-desktop-api-key"
+                className="block text-caption font-medium text-fg-2"
+              >
+                API Key
+              </label>
+              <Input
+                id="codex-desktop-api-key"
+                value={apiKey}
+                onChange={(event) => setApiKey(event.target.value)}
+                placeholder={t("appsPage.codexDesktopKeyPlaceholder")}
+                autoComplete="off"
+                spellCheck={false}
+                // 等宽，方便核对
+                className="font-mono"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !isSaving && apiKey.trim()) {
+                    void handleConfigure();
+                  }
+                }}
+              />
+            </div>
+            {saveError && (
+              <p className="whitespace-pre-wrap text-caption text-danger-text">
+                {saveError}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="neutral"
+              size="regular"
+              disabled={isSaving}
+              onClick={() => setShowKeyDialog(false)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="solid"
+              size="regular"
+              disabled={isSaving || !apiKey.trim()}
+              aria-busy={isSaving}
+              onClick={() => void handleConfigure()}
+            >
+              {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {t("common.confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDownloadDialog} onOpenChange={setShowDownloadDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("appsPage.codexDesktopDownloadTitle")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 px-6 text-body text-fg-2">
+            <ol className="list-decimal space-y-2 ps-5">
+              <li>{t("appsPage.codexDesktopDownloadWindows")}</li>
+              <li className="space-y-1.5">
+                <span>{t("appsPage.codexDesktopDownloadMacos")}</span>
+                <div>
+                  <Button
+                    variant="neutral"
+                    size="compact"
+                    onClick={() =>
+                      void settingsApi.openExternal(OFFICIAL_DOWNLOAD_URL)
+                    }
+                  >
+                    {t("appsPage.codexDesktopDownloadMacosButton")}
+                  </Button>
+                </div>
+              </li>
+              <li className="space-y-1.5">
+                <span>{t("appsPage.codexDesktopDownloadMirrorHint")}</span>
+                <div>
+                  <Button
+                    variant="neutral"
+                    size="compact"
+                    onClick={() =>
+                      void settingsApi.openExternal(SITE_DOWNLOAD_URL)
+                    }
+                  >
+                    {t("appsPage.codexDesktopDownloadMirror")}
+                  </Button>
+                </div>
+              </li>
+            </ol>
+            <p className="text-caption text-fg-3">
+              {t("appsPage.codexDesktopDownloadNote")}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="neutral"
+              size="regular"
+              onClick={() => setShowDownloadDialog(false)}
+            >
+              {t("common.close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

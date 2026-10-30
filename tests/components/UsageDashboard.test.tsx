@@ -356,6 +356,7 @@ describe("UsageDashboard", () => {
       visibleApps: {
         claude: false,
         "claude-desktop": true,
+        "codex-desktop": false,
         codex: true,
         gemini: false,
         grokbuild: false,

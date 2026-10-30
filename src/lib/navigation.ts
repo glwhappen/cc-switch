@@ -142,5 +142,8 @@ export function normalizeSettingsSection(
 
 /** 提示词、会话页在 Claude Desktop 上看的是 Claude Code 的内容（两者共用）。 */
 export function sharedFeatureAppOf(app: AppId): AppId {
-  return app === "claude-desktop" ? "claude" : app;
+  if (app === "claude-desktop") return "claude";
+  // Codex 桌面版与 Codex CLI 共用同一份配置，提示词 / 会话等都看 Codex 的
+  if (app === "codex-desktop") return "codex";
+  return app;
 }

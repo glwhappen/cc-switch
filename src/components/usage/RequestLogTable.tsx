@@ -114,6 +114,7 @@ const APP_SHORT_NAME: Record<AppId, string> = {
   claude: "Claude",
   "claude-desktop": "Desktop",
   codex: "Codex",
+  "codex-desktop": "Desktop",
   gemini: "Gemini",
   grokbuild: "Grok",
   opencode: "OpenCode",

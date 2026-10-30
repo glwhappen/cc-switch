@@ -4217,7 +4217,25 @@
       "mcode": "公式インストールスクリプトで入れ、失敗したら npm を使います",
       "agy": "公式インストールスクリプトでインストール",
       "omp": "公式インストールスクリプトでインストール"
-    }
+    },
+    "codexDesktopHelp": "Codex デスクトップ版は Codex CLI と同じ設定ファイルを共有するため、設定方法も CLI とまったく同じです。",
+    "codexDesktopUnsupported": "未対応",
+    "codexDesktopNotInstalled": "未インストール",
+    "codexDesktopMorePackages": "他 {{count}} 件",
+    "codexDesktopConfigureKey": "自分の Key を設定",
+    "codexDesktopHowToDownload": "ダウンロード方法",
+    "codexDesktopKeyTitle": "Codex の設定を書き込む",
+    "codexDesktopKeyHint": "書き込む前に既存のファイルをバックアップします。変更するのは既定モデルと hsfp プロバイダーの 2 か所だけで、それ以外のセクションはそのまま残します。デスクトップ版はシェルの環境変数を引き継がないため、Key はリクエストヘッダーとして設定に書き込みます。",
+    "codexDesktopKeyPlaceholder": "sk-...",
+    "codexDesktopConfigured": "既定モデルを HSFP に切り替えました。元に戻すにはバックアップファイル（{{path}}）を使ってください",
+    "codexDesktopConfiguredNoBackup": "既定モデルを HSFP に切り替えました（設定ファイルを新規作成したため、バックアップする旧内容はありません）",
+    "codexDesktopDownloadTitle": "Codex デスクトップ版をインストール",
+    "codexDesktopDownloadWindows": "Windows：Microsoft Store で Codex（または ChatGPT）を検索してインストールします。",
+    "codexDesktopDownloadMacos": "macOS：公式ページからインストーラーをダウンロードします。",
+    "codexDesktopDownloadMacosButton": "公式ダウンロードページを開く",
+    "codexDesktopDownloadMirror": "当サイトのミラーからダウンロード",
+    "codexDesktopDownloadMirrorHint": "当サイトのデスクトップ版ダウンロードコーナーです。",
+    "codexDesktopDownloadNote": "インストーラーは約 1GB です。こちらでは代行ダウンロードもサイレントインストールも行いません。ご自身でインストールしてから戻ってきてください。"
   },
   "appPage": {
     "moreActions": "{{name}} のその他の操作",

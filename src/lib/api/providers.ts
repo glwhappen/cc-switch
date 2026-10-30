@@ -45,6 +45,23 @@ export interface ClaudeDesktopStatus {
   gatewayTokenConfigured: boolean;
 }
 
+/** Codex 桌面版（与 Codex CLI 共用 `~/.codex/config.toml`）的探测结果。 */
+export interface CodexDesktopStatus {
+  /** Linux 为 false */
+  supported: boolean;
+  installed: boolean;
+  packages: Array<{ name: string; version: string }>;
+  /** config.toml 里已有 `[model_providers.hsfp]` 且 `model_provider = "hsfp"` */
+  configured: boolean;
+  configPath: string;
+}
+
+export interface CodexDesktopConfigureResult {
+  /** 写入前的备份路径；原来没有 config.toml 时为空字符串 */
+  backupPath: string;
+  configPath: string;
+}
+
 /** 编辑器保存时，live 里的键在编辑期间被别的程序改过怎么办。 */
 export type EditorConflictPolicy = "refuse" | "keepMine" | "keepTheirs";
 
@@ -174,6 +191,17 @@ export const providersApi = {
 
   async getClaudeDesktopStatus(): Promise<ClaudeDesktopStatus> {
     return await invoke("get_claude_desktop_status");
+  },
+
+  async getCodexDesktopStatus(): Promise<CodexDesktopStatus> {
+    return await invoke("codex_desktop_status");
+  },
+
+  /** 把 HSFP 供应商写进 `~/.codex/config.toml`（写前备份，只动我们自己的几个键）。 */
+  async configureCodexDesktop(
+    apiKey: string,
+  ): Promise<CodexDesktopConfigureResult> {
+    return await invoke("configure_codex_desktop", { apiKey });
   },
 
   async getClaudeDesktopDefaultRoutes(): Promise<ClaudeDesktopDefaultRoute[]> {
